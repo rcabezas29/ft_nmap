@@ -1,0 +1,8 @@
+[submodule "lib/libft"]
+	path = lib/libft
+	url = git@github.com:rcabezas29/libft.git
+
+[submodule "lib/lib_tpool"]
+	path = lib/lib_tpool
+	url = git@github.com:rcabezas29/lib_thread_pool.git
+	

@@ -15,7 +15,7 @@ void	iterate_over_every_port(t_nmap_config *conf)
 	t_list	*current_port = conf->ports;
 	while (current_port)
 	{
-		printf("Scanning Port: %i\n", *(int *)(current_port->data));
+		printf("Scanning Port: %i\n", *(int *)(current_port->content));
 		current_port = current_port->next;
 	}
 }

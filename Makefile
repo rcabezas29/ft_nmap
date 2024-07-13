@@ -54,10 +54,10 @@ LFT_DIR = $(LIB_DIR)/libft
 LFT = $(LFT_DIR)/$(LFT_NAME)
 
 LTPOOL_NAME = lib_tpool.a
-LTPOOL_DIR = $(LIB_DIR)/lib_tpool
+LTPOOL_DIR = $(LIB_DIR)/lib_thread_pool
 LTPOOL = $(LTPOOL_DIR)/$(LTPOOL_NAME)
 
-CFLAGS += -I./$(LFT_DIR)/include -I./$(LTPOOL_DIR)/include
+CFLAGS += -I./$(LFT_DIR)/includes -I./$(LTPOOL_DIR)/include
 
 LDFLAGS += -L./$(LFT_DIR) -lft -L./$(LTPOOL_DIR) -l_tpool
 
@@ -69,7 +69,7 @@ LDLIBS = $(LFT) $(LTPOOL)
 
 all: $(NAME)
 
-$(NAME): $(OBJS) $(LDLIBS)
+$(NAME): $(LDLIBS) $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
 ifeq ($(UNAME_S),Linux)

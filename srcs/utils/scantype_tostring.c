@@ -2,20 +2,19 @@
 
 char	*scantype_tostring(t_scan_type scan)
 {
-	if (scan == SYN) {
+	if (scan == SYN)
 		return "SYN";
-	} else if (scan == NUL) {
+	else if (scan == NUL)
 		return "NUL";
-	} else if (scan == ACK)	{
+	else if (scan == ACK)
 		return "ACK";
-	} else if (scan == FIN) {
+	else if (scan == FIN)
 		return "FIN";
-	} else if (scan == XMAS) {
+	else if (scan == XMAS)
 		return "XMAS";
-	} else if (scan == UDP) {
+	else if (scan == UDP)
 		return "UDP";
-	} else if (scan == ALL) {
+	else if (scan == ALL)
 		return "SYN NUL ACK FIN XMAS UDP";
-	}
 	return "";
 }

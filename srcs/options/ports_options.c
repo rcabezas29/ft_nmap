@@ -10,17 +10,18 @@ static void	parse_port_ranges(char *commas, t_list **ports)
 	beggining = ft_atoi(range[0]);
 	end = ft_atoi(range[1]);
 	double_free(range);
-	if (beggining == 0 || end == 0) {
+	if (beggining == 0 || end == 0)
+	{
 		fprintf(stderr, "Error: Unable to recognize ports\n");
 		exit(EXIT_FAILURE);
 	}
-
-	if (((end - beggining) + 1) < 2) {
+	if (((end - beggining) + 1) < 2)
+	{
 		fprintf(stderr, "Error: Invalid range of ports\n");
 		exit(EXIT_FAILURE);
 	}
-
-	for (int i = beggining; i <= end; i++) {
+	for (int i = beggining; i <= end; i++)
+	{
 		int	*n = malloc(sizeof(int));
 		*n = i;
 		ft_lstadd_back(ports, ft_lstnew(n));
@@ -34,12 +35,14 @@ t_list	*parse_ports(const char *argument)
 
 	for (int i = 0; commas[i]; ++i)
 	{
-		if (ft_strchr(commas[i], '-')) {
+		if (ft_strchr(commas[i], '-'))
 			parse_port_ranges(commas[i], &ports);
-		} else {
+		else
+		{
 			int	*n = malloc(sizeof(int));
 			*n = ft_atoi(commas[i]);
-			if (n == 0) {
+			if (n == 0)
+			{
 				fprintf(stderr, "Error: Unable to recognize ports\n");
 				exit(EXIT_FAILURE);
 			}

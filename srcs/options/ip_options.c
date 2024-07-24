@@ -30,9 +30,10 @@ static char	*get_ip_from_domain(const char *domain)
 {
 	struct hostent *ghbn = gethostbyname(domain);
 
-	if (ghbn) {
+	if (ghbn)
 		return inet_ntoa(*(struct in_addr *)ghbn->h_addr);
-	} else {
+	else
+	{
 		printf("Invalid IP Address");
 		exit(EXIT_FAILURE);
 	}
@@ -57,11 +58,10 @@ char	**parse_ips_file(const char *argument)
 	i = 0;
 	while ((getline(&line, &len, fp)) != -1)
 	{
-		if (is_valid_ip(line)) {
+		if (is_valid_ip(line))
 			ips[i] = ft_strdup(line);
-		} else {
+		else
 			ips[i] = get_ip_from_domain(line);
-		}
 		i++;
 	}
 	ips[i] = NULL;
@@ -73,11 +73,10 @@ char	**parse_ips_file(const char *argument)
 char	**parse_ip(const char *argument)
 {
 	char	**ip = malloc(2 * sizeof(char *));
-	if (is_valid_ip(argument)) {
+	if (is_valid_ip(argument))
 		ip[0] = ft_strdup(argument);
-	} else {
+	else
 		ip[0] = get_ip_from_domain(argument);
-	}
 	ip[1] = NULL;
 	return ip;
 }

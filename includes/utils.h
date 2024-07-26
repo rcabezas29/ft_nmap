@@ -3,7 +3,8 @@
 
 #include <stdlib.h>
 
-typedef enum	e_scan_type {
+typedef enum	e_scan_type
+{
 	SYN,
 	NUL,
 	ACK,

@@ -15,7 +15,8 @@
 #include <utils.h>
 #include <libft.h>
 
-typedef struct s_nmap_config {
+typedef struct s_nmap_config
+{
 	t_scan_type	scan_type;
 	char		**ips;
 	t_list		*ports;

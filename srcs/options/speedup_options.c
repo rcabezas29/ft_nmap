@@ -10,5 +10,5 @@ int	parse_thread_number(const char *argument)
 		exit(EXIT_FAILURE);
 	}
 	else
-		return(n);
+		return (n);
 }

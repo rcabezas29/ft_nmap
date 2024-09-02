@@ -10,14 +10,41 @@ void	print_configurations(t_nmap_config *conf)
 	ft_putstr_fd("Scanning...\n", 1);
 }
 
-void	iterate_over_every_port(t_nmap_config *conf)
+void	iterate_over_every_port(t_scan *scan)
 {
-	t_list	*current_port = conf->ports;
-	while (current_port)
+	pthread_t		threads[4];
+	t_thread_data	*thread_data = malloc(sizeof(t_thread_data) * 4);
+	int				ports_per_thread = scan->n_ports / 4;
+
+	for (int i = 0; i < 4; i++)
 	{
-		printf("Scanning Port: %i\n", *(int *)(current_port->content));
-		current_port = current_port->next;
+		thread_data[i].scan = scan;
+		thread_data[i].n_ports = ports_per_thread;
+		thread_data[i].start_port_index = i * ports_per_thread;
+		if (i == 4 - 1)
+		{
+			thread_data[i].end_port_index = scan->n_ports - 1;
+			thread_data[i].n_ports += scan->n_ports % 4;
+		}
+		else
+			thread_data[i].end_port_index = (i + 1) * ports_per_thread - 1;
+		if (pthread_create(&threads[i], NULL, (void *(*)(void *))scanning, &thread_data[i]) != 0)
+		{
+			perror("pthread_create failed");
+			free(thread_data);
+			exit(EXIT_FAILURE);
+		}
 	}
+	for (int i = 0; i < 4; i++)
+	{
+		if (pthread_join(threads[i], NULL) != 0)
+		{
+			perror("pthread_join failed");
+			free(thread_data);
+			exit(EXIT_FAILURE);
+		}
+	}
+    free(thread_data);
 }
 
 t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
@@ -27,6 +54,7 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 	int		n_scans = conf->scan_type == ALL ? 6 : 1;
 
 	scan->ip = ip;
+	scan->n_ports = n_ports;
 	scan->port_scan_array = malloc(sizeof(t_port_scan) * n_ports);
 
 	t_list	*current_port = conf->ports;
@@ -34,6 +62,7 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 	{
 		scan->port_scan_array[i].port = *(int *)(current_port->content);
 		scan->port_scan_array[i].scans_type = malloc(sizeof(t_scan_type_pair) * n_scans);
+		scan->port_scan_array[i].n_scans = n_scans;
 		for (int j = 0; j < n_scans; ++j)
 		{
 			if (conf->scan_type == ALL)
@@ -60,24 +89,17 @@ void	free_scan_struct(t_scan *scan, t_nmap_config *conf)
 
 void	scan(t_nmap_config *conf)
 {
-	tpool_t	*tm;
-
 	for (int i = 0; conf->ips[i]; ++i)
 	{
 		t_scan	*scan = create_scan_result_struct(conf, conf->ips[i]);
-		tm = tpool_create(conf->n_speedup_threads + 1);
-		tpool_add_work(tm, (void (*)(void *))sniffer, scan);
-		clock_t	start;
-		double	cpu_time_used;
-		
-		start = clock();
-		iterate_over_every_port(conf);
-		cpu_time_used = ((double)(clock() - start)) / CLOCKS_PER_SEC;
+		struct timeval end, start;
 
-		tpool_wait(tm);
-		printf("Scan took %f secs\n", cpu_time_used);
+  		gettimeofday(&start, NULL);
+		iterate_over_every_port(scan);
+
+		gettimeofday(&end, NULL);
+		printf("Scan took %f secs\n", (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);
 		printf("IP address: %s\n", conf->ips[i]);
-		tpool_destroy(tm);
 		free_scan_struct(scan, conf);
 	}
 }

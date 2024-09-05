@@ -16,7 +16,7 @@ typedef enum	e_scan_state
 	CLOSED
 }	t_scan_state;
 
-typedef	union	u_scan_type_pair
+typedef	struct	u_scan_type_pair
 {
 	t_scan_type		type;
 	t_scan_state	state;
@@ -55,5 +55,7 @@ void	get_local_ip(char *buffer);
 unsigned short csum(unsigned short *ptr,int nbytes);
 
 void	*scanning(t_thread_data *data);
+
+void	send_port_scan(char *ip, int port, t_scan_type);
 
 #endif

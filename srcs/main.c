@@ -34,13 +34,14 @@ void	iterate_over_every_port(t_scan *scan)
 			free(thread_data);
 			exit(EXIT_FAILURE);
 		}
+		break ;
 	}
 	for (int i = 0; i < 4; i++)
 	{
 		if (pthread_join(threads[i], NULL) != 0)
 		{
 			perror("pthread_join failed");
-			free(thread_data);
+			// free(thread_data);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -73,7 +74,6 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 		}
 		current_port = current_port->next;
 	}
-
 	return scan;
 }
 
@@ -92,6 +92,7 @@ void	scan(t_nmap_config *conf)
 	for (int i = 0; conf->ips[i]; ++i)
 	{
 		t_scan	*scan = create_scan_result_struct(conf, conf->ips[i]);
+
 		struct timeval end, start;
 
   		gettimeofday(&start, NULL);
@@ -108,6 +109,11 @@ int	main(int argc, char **argv)
 {
 	t_nmap_config	*conf;
 
+	if (getuid())
+	{
+		write(2, "ft_nmap must be run with root rights\n", 38);
+		return 1;
+	}
 	conf = malloc(sizeof(t_nmap_config));
 	parse_options(argc, argv, conf);
 

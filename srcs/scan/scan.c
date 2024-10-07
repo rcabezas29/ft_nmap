@@ -43,10 +43,12 @@ void	*scanning(t_thread_data *data)
 				int port = data->scan->port_scan_array[port_index].port;
 				t_scan_type st = data->scan->port_scan_array[port_index].scans_type[i % n_scans].type;
 				
+				// printf("PORT %i - SCAN TYPE = %i\n", port, st);
+				
 				if (pfds[i].revents & POLLIN) {
 					printf("Port %d is open on %s\n", ntohs(pfds[i].fd), data->scan->ip);
 				} else if (pfds[i].revents & POLLOUT) {
-					// send_port_scan(data->scan->ip, );
+					send_port_scan(pfds[i].fd, data->scan->ip, port, st);
 				}
 				close(pfds[i].fd);
 			}

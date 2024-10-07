@@ -34,7 +34,7 @@ void	iterate_over_every_port(t_scan *scan)
 			free(thread_data);
 			exit(EXIT_FAILURE);
 		}
-		break ;
+		// break ;
 	}
 	for (int i = 0; i < 4; i++)
 	{

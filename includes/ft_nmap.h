@@ -56,6 +56,8 @@ unsigned short csum(unsigned short *ptr,int nbytes);
 
 void	*scanning(t_thread_data *data);
 
-void	send_port_scan(char *ip, int port, t_scan_type);
+void	send_port_scan(int socket, char *ip, int port, t_scan_type type);
 
+// unsigned short	csum(unsigned short *ptr,int nbytes);
+// void	get_local_ip(char *buffer);
 #endif

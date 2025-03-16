@@ -24,7 +24,7 @@ RM = rm -rf
 CC = gcc
 CPPFLAGS = -MMD
 # CFLAGS = -Wall -Wextra -Werror -Wpedantic -Wshadow -g3
-CFLAGS = -Wall -Wextra -Werror -Wpedantic -Wshadow -g3 -fsanitize=address -fsanitize=leak -fsanitize=undefined -fsanitize=bounds -fsanitize=null
+CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=address
 
 # **************************************************************************** #
 #                                   SOURCES                                    #

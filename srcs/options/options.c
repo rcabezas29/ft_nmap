@@ -1,6 +1,6 @@
 #include <options.h>
 
-void	parse_long_option(const char *option, const char *argument, t_nmap_config *conf)
+void parse_long_option(const char *option, const char *argument, t_nmap_config *conf)
 {
 	if (strcmp(option, "help") == 0)
 	{
@@ -19,22 +19,21 @@ void	parse_long_option(const char *option, const char *argument, t_nmap_config *
 		conf->ips = parse_ips_file(argument);
 }
 
-void	parse_options(int argc, char **argv, t_nmap_config *conf)
+void parse_options(int argc, char **argv, t_nmap_config *conf)
 {
 	static struct option long_options[] = {
 		{"help", no_argument, 0, 'h'},
 		{"ports", required_argument, 0, 'p'},
 		{"ip", required_argument, 0, 0},
 		{"speedup", required_argument, 0, 's'},
-		{"scan",  required_argument, 0, 0},
-		{"file",  required_argument, 0, 'f'},
-		{0, 0, 0, 0}
-	};
-	int	option_index = 0;
-	int	default_threads = 0;
-	int	default_scans = 0;
-	int	mandatory_flag = 0;
-	int	c;
+		{"scan", required_argument, 0, 0},
+		{"file", required_argument, 0, 'f'},
+		{0, 0, 0, 0}};
+	int option_index = 0;
+	int default_threads = 0;
+	int default_scans = 0;
+	int mandatory_flag = 0;
+	int c;
 
 	while ((c = getopt_long(argc, argv, "hp:s:f:", long_options, &option_index)) != -1)
 	{
@@ -76,6 +75,8 @@ void	parse_options(int argc, char **argv, t_nmap_config *conf)
 		conf->n_speedup_threads = 1;
 	if (default_scans == 0)
 		conf->scan_type = ALL;
+	if (conf->ports == NULL)
+		conf->ports = parse_ports("1-1024");
 	if (ft_lstsize(conf->ports) > 1024)
 	{
 		printf("Ports cannot be more than 1024\n");

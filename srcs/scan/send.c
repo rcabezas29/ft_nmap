@@ -2,6 +2,7 @@
 
 struct in_addr dest_ip;
 
+
 void	send_port_scan(int socket, char *ip, int port, t_scan_type type)
 {
 	printf("Scanning port %i for IP: %s and type: %i\n", port, ip, type);

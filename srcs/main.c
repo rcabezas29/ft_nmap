@@ -15,33 +15,27 @@ void	iterate_over_every_port(t_scan *scan)
 	pthread_t		threads[4];
 	t_thread_data	*thread_data = malloc(sizeof(t_thread_data) * 4);
 	int				ports_per_thread = scan->n_ports / 4;
+	int				extra_ports = scan->n_ports % 4;
 
 	for (int i = 0; i < 4; i++)
 	{
 		thread_data[i].scan = scan;
-		thread_data[i].n_ports = ports_per_thread;
-		thread_data[i].start_port_index = i * ports_per_thread;
-		if (i == 4 - 1)
-		{
-			thread_data[i].end_port_index = scan->n_ports - 1;
-			thread_data[i].n_ports += scan->n_ports % 4;
-		}
-		else
-			thread_data[i].end_port_index = (i + 1) * ports_per_thread - 1;
+		thread_data[i].n_ports = ports_per_thread + (i < extra_ports ? 1 : 0);
+		thread_data[i].start_port_index = i * ports_per_thread + (i < extra_ports ? i : extra_ports);
+			thread_data[i].end_port_index = thread_data[i].start_port_index + thread_data[i].n_ports - 1;
+
 		if (pthread_create(&threads[i], NULL, (void *(*)(void *))scanning, &thread_data[i]) != 0)
 		{
 			perror("pthread_create failed");
 			free(thread_data);
 			exit(EXIT_FAILURE);
 		}
-		// break ;
-	}
+			}
 	for (int i = 0; i < 4; i++)
 	{
 		if (pthread_join(threads[i], NULL) != 0)
 		{
 			perror("pthread_join failed");
-			// free(thread_data);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -114,14 +108,14 @@ int	main(int argc, char **argv)
 		write(2, "ft_nmap must be run with root rights\n", 38);
 		return 1;
 	}
-	conf = malloc(sizeof(t_nmap_config));
+	conf = ft_calloc(1, sizeof(t_nmap_config));
 	parse_options(argc, argv, conf);
 
 	print_configurations(conf);
 
 	printf("................\n");
 
-	scan(conf);
+	// scan(conf);
 
 	ft_lstclear(&conf->ports, free);
 	double_free(conf->ips);

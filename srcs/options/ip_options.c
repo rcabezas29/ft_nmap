@@ -1,14 +1,11 @@
 #include <options.h>
 
-static bool	is_valid_ip(const char *ip)
+bool is_valid_ip(const char *ip)
 {
-	int	a, b, c, d;
+    struct sockaddr_in	sa;
 
-	int s = sscanf(ip, "%i.%i.%i.%i", &a, &b, &c, &d);
-	if (s != 4 || a < 0 || a > 255 || b < 0 || b > 255 || c < 0 || c > 255 || d < 0 || d > 255)
-		return false;
-	else
-		return true;
+    int result = inet_pton(AF_INET, ip, &(sa.sin_addr));
+    return result != 0;
 }
 
 static int	count_ip_file_length(const char *argument)
@@ -31,7 +28,7 @@ static char	*get_ip_from_domain(const char *domain)
 	struct hostent *ghbn = gethostbyname(domain);
 
 	if (ghbn)
-		return inet_ntoa(*(struct in_addr *)ghbn->h_addr);
+		return ft_strdup(inet_ntoa(*(struct in_addr *)ghbn->h_addr));
 	else
 	{
 		printf("Invalid IP Address");

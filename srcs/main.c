@@ -1,13 +1,14 @@
 #include <ft_nmap.h>
 
-void	print_configurations(t_nmap_config *conf)
+void	print_configurations(t_nmap_config *conf, int i)
 {
-	ft_putstr_fd("\nScan Configurations\n", 1);
-	printf("Target Ip-Address : %s\n", conf->ips[0]);
+	printf("\nScan Configurations\n");
+	printf("Target Ip-Address : %s\n", conf->ips[i]);
 	printf("No of Ports to scan : %i\n", ft_lstsize(conf->ports));
 	printf("Scans to be performed : %s \n", scantype_tostring(conf->scan_type));
 	printf("No of threads : %i\n", conf->n_speedup_threads);
-	ft_putstr_fd("Scanning...\n", 1);
+	printf("Scanning...\n");
+	printf("................\n");
 }
 
 void	iterate_over_every_port(t_scan *scan)
@@ -111,9 +112,13 @@ int	main(int argc, char **argv)
 	conf = ft_calloc(1, sizeof(t_nmap_config));
 	parse_options(argc, argv, conf);
 
-	print_configurations(conf);
+	for (int i = 0; conf->ips[i]; ++i)
+	{
+		print_configurations(conf, i);
 
-	printf("................\n");
+	}
+
+
 
 	// scan(conf);
 

@@ -1,6 +1,5 @@
 #include <options.h>
 
-
 static void	parse_port_ranges(char *commas, t_list **ports)
 {
 	char	**range;

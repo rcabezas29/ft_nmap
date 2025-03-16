@@ -3,11 +3,11 @@
 
 #include <options.h>
 #include <time.h>
-#include <lib_tpool.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
 #include <sys/time.h>
 #include <poll.h>
+#include <pthread.h>
 
 typedef enum	e_scan_state
 {

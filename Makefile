@@ -1,34 +1,12 @@
-# **************************************************************************** #
-#                                   PROGRAM                                    #
-# **************************************************************************** #
-
 NAME = $(BUILD_DIR)/ft_nmap
 
-# **************************************************************************** #
-#                                     VARS                                     #
-# **************************************************************************** #
-
-UNAME_S := $(shell uname -s)
-
-MAKE = make
-
-CP = cp
-MV = mv
 MKDIR = mkdir -p
 RM = rm -rf
 
-# **************************************************************************** #
-#                                   COMPILER                                   #
-# **************************************************************************** #
-
 CC = gcc
 CPPFLAGS = -MMD
-# CFLAGS = -Wall -Wextra -Werror -Wpedantic -Wshadow -g3
-CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=address
-
-# **************************************************************************** #
-#                                   SOURCES                                    #
-# **************************************************************************** #
+CFLAGS = -Wall -Wextra -Werror
+LDFLAGS = -pthread
 
 BUILD_DIR := build
 SRC_DIR := srcs
@@ -39,49 +17,25 @@ SRCS := $(shell find $(SRC_DIR) -name '*.c')
 OBJS := $(SRCS:%.c=$(BUILD_DIR)/%.o)
 DEPS := $(OBJS:%.o=%.d)
 
-# **************************************************************************** #
-#                                    FLAGS                                     #
-# **************************************************************************** #
-
-CFLAGS += -I./$(INC_DIR)
-
-# **************************************************************************** #
-#                                     LIBS                                     #
-# **************************************************************************** #
+CFLAGS += -I ./$(INC_DIR)
 
 LFT_NAME = libft.a
 LFT_DIR = $(LIB_DIR)/libft
 LFT = $(LFT_DIR)/$(LFT_NAME)
 
-LTPOOL_NAME = lib_tpool.a
-LTPOOL_DIR = $(LIB_DIR)/lib_thread_pool
-LTPOOL = $(LTPOOL_DIR)/$(LTPOOL_NAME)
+CFLAGS += -I ./$(LFT_DIR)/includes
 
-CFLAGS += -I./$(LFT_DIR)/includes -I./$(LTPOOL_DIR)/include
+LDFLAGS += -L./$(LFT_DIR) -lft
 
-LDFLAGS += -L./$(LFT_DIR) -lft -L./$(LTPOOL_DIR) -l_tpool
-
-LDLIBS = $(LFT) $(LTPOOL)
-
-# **************************************************************************** #
-#                                    RULES                                     #
-# **************************************************************************** #
+LDLIBS = $(LFT)
 
 all: $(NAME)
 
 $(NAME): $(LDLIBS) $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LDFLAGS)
 
-ifeq ($(UNAME_S),Linux)
 sanitize:: CFLAGS += -g3 -fsanitize=address -fsanitize=leak -fsanitize=undefined -fsanitize=bounds -fsanitize=null
-endif
-ifeq ($(UNAME_S),Darwin)
-sanitize:: CFLAGS += -g3 -fsanitize=address
-endif
 sanitize:: $(NAME)
-
-thread:: CFLAGS += -g3 -fsanitize=thread
-thread:: $(NAME)
 
 $(BUILD_DIR)/%.o: %.c
 	mkdir -p $(dir $@)
@@ -90,9 +44,6 @@ $(BUILD_DIR)/%.o: %.c
 $(LFT):
 	$(MAKE) -C $(LFT_DIR)
 
-$(LTPOOL):
-	$(MAKE) -C $(LTPOOL_DIR)
-
 clean:
 	$(MAKE) fclean -C $(LFT_DIR)
 	$(RM) $(OBJS)
@@ -100,9 +51,8 @@ clean:
 fclean: clean
 	$(RM) $(BUILD_DIR)
 
-re:: clean
-re:: all
+re: clean all
 
 -include $(DEPS)
 
-.PHONY: all sanitize thread clean fclean re
+.PHONY: all sanitize clean fclean re

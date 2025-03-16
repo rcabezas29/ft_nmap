@@ -25,6 +25,7 @@ typedef	struct	u_scan_type_pair
 typedef struct	s_port_scan
 {
 	t_scan_type_pair	*scans_type;
+	char				*service_name;
 	int					port;
 	int					n_scans;
 }	t_port_scan;
@@ -57,6 +58,8 @@ unsigned short csum(unsigned short *ptr,int nbytes);
 void	*scanning(t_thread_data *data);
 
 void	send_port_scan(int socket, char *ip, int port, t_scan_type type);
+
+void print_scan_result(t_scan *scan);
 
 // unsigned short	csum(unsigned short *ptr,int nbytes);
 // void	get_local_ip(char *buffer);

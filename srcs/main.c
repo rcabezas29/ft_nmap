@@ -82,22 +82,20 @@ void	free_scan_struct(t_scan *scan, t_nmap_config *conf)
 	free(scan);
 }
 
-void	scan(t_nmap_config *conf)
+void	scan(t_nmap_config *conf, int i)
 {
-	for (int i = 0; conf->ips[i]; ++i)
-	{
-		t_scan	*scan = create_scan_result_struct(conf, conf->ips[i]);
+	t_scan	*scan = create_scan_result_struct(conf, conf->ips[i]);
 
-		struct timeval end, start;
+	struct timeval end, start;
 
-  		gettimeofday(&start, NULL);
-		iterate_over_every_port(scan);
+	gettimeofday(&start, NULL);
+	// iterate_over_every_port(scan);
 
-		gettimeofday(&end, NULL);
-		printf("Scan took %f secs\n", (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);
-		printf("IP address: %s\n", conf->ips[i]);
-		free_scan_struct(scan, conf);
-	}
+	gettimeofday(&end, NULL);
+	printf("Scan took %f secs\n", (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);
+	printf("IP address: %s\n", conf->ips[i]);
+	print_scan_result(scan);
+	free_scan_struct(scan, conf);
 }
 
 int	main(int argc, char **argv)
@@ -115,13 +113,8 @@ int	main(int argc, char **argv)
 	for (int i = 0; conf->ips[i]; ++i)
 	{
 		print_configurations(conf, i);
-
+		scan(conf, i);
 	}
-
-
-
-	// scan(conf);
-
 	ft_lstclear(&conf->ports, free);
 	double_free(conf->ips);
 	free(conf);

@@ -2,19 +2,11 @@
 #define UTILS_H
 
 #include <stdlib.h>
-
-typedef enum	e_scan_type
-{
-	SYN,
-	NUL,
-	ACK,
-	FIN,
-	XMAS,
-	UDP,
-	ALL
-}	t_scan_type;
+#include <scan.h>
 
 void	double_free(char **arr);
 char	*scantype_tostring(t_scan_type scan);
+void	free_scan_struct(t_scan *scan, t_nmap_config *conf);
+void	print_configurations(t_nmap_config *conf, int i);
 
 #endif

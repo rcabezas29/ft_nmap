@@ -1,5 +1,16 @@
 #include <ft_nmap.h>
 
+void	print_configurations(t_nmap_config *conf, int i)
+{
+	printf("\nScan Configurations\n");
+	printf("Target Ip-Address : %s\n", conf->ips[i]);
+	printf("No of Ports to scan : %i\n", ft_lstsize(conf->ports));
+	printf("Scans to be performed : %s \n", scantype_tostring(conf->scan_type));
+	printf("No of threads : %i\n", conf->n_speedup_threads);
+	printf("Scanning...\n");
+	printf("................\n");
+}
+
 static const char *get_scan_type_name(t_scan_type type)
 {
     switch (type)

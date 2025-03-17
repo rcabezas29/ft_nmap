@@ -15,14 +15,6 @@
 #include <utils.h>
 #include <libft.h>
 
-typedef struct s_nmap_config
-{
-	t_scan_type	scan_type;
-	char		**ips;
-	t_list		*ports;
-	int			n_speedup_threads;
-}	t_nmap_config;
-
 void		parse_options(int argc, char **argv, t_nmap_config *conf);
 void		parse_long_option(const char *option, const char *optarg, t_nmap_config *conf);
 

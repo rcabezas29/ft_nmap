@@ -1,59 +1,54 @@
 #include <ft_nmap.h>
 
-struct pollfd	*initialize_poll_struct(t_thread_data *data)
-{
-	struct pollfd		*pfds;
-	int					n_scans = data->scan->port_scan_array[0].n_scans;
-
-	pfds = malloc(sizeof(struct pollfd) * data->n_ports * n_scans + 1);
-	for (int port = 0; port < data->n_ports; port++)
-	{
-		for (t_scan_type sn = SYN; (int)sn < n_scans; sn++)
-		{
-			pfds[port * data->n_ports + sn].fd = socket(AF_INET, SOCK_RAW, sn == UDP || (data->scan->port_scan_array[0].scans_type[0].type == UDP) ? IPPROTO_UDP : IPPROTO_TCP);
-			if (pfds[port * data->n_ports + sn].fd < 0)
-			{
-				perror("Socket creation failed");
-				continue ;
-			}
-			pfds[port * data->n_ports + sn].events = POLLOUT;
-		}
-    }
-	return pfds;
-}
-
 void	*scanning(t_thread_data *data)
 {
 	int					n_scans = data->scan->port_scan_array[0].n_scans;
 	int					len = data->n_ports * n_scans;
-	struct pollfd		*pfds = initialize_poll_struct(data);
+	int					*sockets = malloc(sizeof(int) * len);
 
-	while (true)
+	for (int i = 0; i < len; i++)
 	{
-		int ret = poll(pfds, len, 50000);
-		if (ret < 0)
-			perror("poll failed");
-		else if (ret == 0)
-			printf("Timeout occurred! No data.\n");
-		else
+		int port_index = (i + data->start_port_index) / n_scans;
+		int port = data->scan->port_scan_array[port_index].port;
+		t_scan_type st = data->scan->port_scan_array[port_index].scans_type[i % n_scans].type;
+
+		sockets[i] = socket(AF_INET, SOCK_RAW, st == UDP || (data->scan->port_scan_array[0].scans_type[0].type == UDP) ? IPPROTO_UDP : IPPROTO_TCP);
+		if (sockets[i] < 0)
 		{
-			for (int i = 0; i < len; i++)
-			{
-				int port_index = (i + data->start_port_index) / n_scans;
-				int port = data->scan->port_scan_array[port_index].port;
-				t_scan_type st = data->scan->port_scan_array[port_index].scans_type[i % n_scans].type;
-				
-				// printf("PORT %i - SCAN TYPE = %i\n", port, st);
-				
-				if (pfds[i].revents & POLLIN) {
-					printf("Port %d is open on %s\n", ntohs(pfds[i].fd), data->scan->ip);
-				} else if (pfds[i].revents & POLLOUT) {
-					send_port_scan(pfds[i].fd, data->scan->ip, port, st);
-				}
-				close(pfds[i].fd);
-			}
+			perror("Socket creation failed");
+			continue ;
 		}
+		send_port_scan(sockets[i], data->scan->ip, port, st);
+		close(sockets[i]);
 	}
-	free(pfds);
 	return NULL;
+}
+
+t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
+{
+	t_scan	*scan = malloc(sizeof(t_scan));
+	int		n_ports = ft_lstsize(conf->ports);
+	int		n_scans = conf->scan_type == ALL ? 6 : 1;
+
+	scan->ip = ip;
+	scan->n_ports = n_ports;
+	scan->port_scan_array = malloc(sizeof(t_port_scan) * n_ports);
+
+	t_list	*current_port = conf->ports;
+	for (int i = 0; i < n_ports; ++i)
+	{
+		scan->port_scan_array[i].port = *(int *)(current_port->content);
+		scan->port_scan_array[i].scans_type = malloc(sizeof(t_scan_type_pair) * n_scans);
+		scan->port_scan_array[i].n_scans = n_scans;
+		for (int j = 0; j < n_scans; ++j)
+		{
+			if (conf->scan_type == ALL)
+				scan->port_scan_array[i].scans_type[j].type = j;
+			else
+				scan->port_scan_array[i].scans_type[j].type = conf->scan_type;
+			scan->port_scan_array[i].scans_type[j].state = FILTERED;
+		}
+		current_port = current_port->next;
+	}
+	return scan;
 }

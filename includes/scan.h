@@ -30,7 +30,6 @@ typedef	struct	u_scan_type_pair
 typedef struct	s_port_scan
 {
 	t_scan_type_pair	*scans_type;
-	char				*service_name;
 	int					port;
 	int					n_scans;
 }	t_port_scan;

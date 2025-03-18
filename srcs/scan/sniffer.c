@@ -148,7 +148,7 @@ void	sniffer(t_scan *scan)
 						fflush(stdout);
 						return ;
 					}
-					printf("Received packet: %s\n", buffer);
+					// printf("Received packet: %s\n", buffer);
 					// process_packet(buffer, scan);
 				}
 			}

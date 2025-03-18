@@ -18,7 +18,7 @@ typedef struct s_thread_data
 }		t_thread_data;
 
 void	process_packet(unsigned char *buffer, t_scan *scan);
-void	sniffer(t_scan *scan);
+void	sniffer(t_scan *scan, int timeout);
 
 t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip);
 void	free_scan_struct(t_scan *scan, t_nmap_config *conf);

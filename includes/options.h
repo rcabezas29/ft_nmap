@@ -29,4 +29,6 @@ t_scan_type	parse_scan_type(const char *optarg);
 
 int			parse_thread_number(const char *optarg);
 
+int			parse_timeout(const char *timeout);
+
 #endif

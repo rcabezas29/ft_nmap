@@ -47,6 +47,7 @@ typedef struct s_nmap_config
 	char		**ips;
 	t_list		*ports;
 	int			n_speedup_threads;
+	int			timeout;
 }	t_nmap_config;
 
 #endif

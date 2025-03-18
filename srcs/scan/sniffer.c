@@ -115,7 +115,7 @@ static void	setup_listening_sockets(int *sock_raw_tcp, int *sock_raw_udp, struct
 	pfds[1].events = POLLIN;
 }
 
-void	sniffer(t_scan *scan)
+void	sniffer(t_scan *scan, int timeout)
 {
 	(void)scan;
 	struct pollfd	pfds[2];
@@ -148,13 +148,12 @@ void	sniffer(t_scan *scan)
 						fflush(stdout);
 						return ;
 					}
-					// printf("Received packet: %s\n", buffer);
 					// process_packet(buffer, scan);
 				}
 			}
 		}
 		gettimeofday(&current_time, NULL);
-		if (current_time.tv_sec - start_time.tv_sec > 5)
+		if ((current_time.tv_sec - start_time.tv_sec) * 1000 + (current_time.tv_usec - start_time.tv_usec) / 1000 > timeout)
 			break ;
 	}
 	close(tcp_sock_raw);

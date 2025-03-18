@@ -1,6 +1,6 @@
 #include <ft_nmap.h>
 
-void	iterate_over_every_port(t_scan *scan, int n_threads)
+void	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 {
 	pthread_t		threads[n_threads];
 	t_thread_data	*thread_data = malloc(sizeof(t_thread_data) * n_threads);
@@ -20,7 +20,7 @@ void	iterate_over_every_port(t_scan *scan, int n_threads)
 			exit(EXIT_FAILURE);
 		}
 	}
-	sniffer(scan);
+	sniffer(scan, timeout);
 	for (int i = 0; i < n_threads; i++)
 	{
 		if (pthread_join(threads[i], NULL) != 0)
@@ -37,9 +37,8 @@ void	scan(t_nmap_config *conf, int i)
 	struct timeval end, start;
 	t_scan	*scan = create_scan_result_struct(conf, conf->ips[i]);
 
-	printf("Scanning threads %d\n", conf->n_speedup_threads);
 	gettimeofday(&start, NULL);
-	iterate_over_every_port(scan, conf->n_speedup_threads);
+	iterate_over_every_port(scan, conf->n_speedup_threads, conf->timeout);
 	gettimeofday(&end, NULL);
 
 	printf("Scan took %f secs\n", (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);

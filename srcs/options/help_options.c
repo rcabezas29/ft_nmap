@@ -11,6 +11,7 @@ void	print_help(void)
 		" --file File name containing IP addresses to scan,\n" \
 		" --speedup [250 max] number of parallel threads to use\n" \
 		" --scan SYN/NULL/FIN/XMAS/ACK/UDP\n"
+		" --timeout timeout in ms\n"
 	);
 	exit(EXIT_SUCCESS);
 }

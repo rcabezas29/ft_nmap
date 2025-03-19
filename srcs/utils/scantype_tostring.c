@@ -21,7 +21,7 @@ t_scan_type	string_to_scan_type(const char *str)
 {
 	if (strcmp(str, "SYN") == 0)
 		return SYN;
-	else if (strcmp(str, "NUL") == 0)
+	else if (strcmp(str, "NULL") == 0)
 		return NUL;
 	else if (strcmp(str, "ACK") == 0)
 		return ACK;

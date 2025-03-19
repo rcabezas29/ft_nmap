@@ -8,6 +8,8 @@
 #include <sys/time.h>
 #include <poll.h>
 #include <pthread.h>
+#include <pcap.h>
+#include <signal.h>
 
 typedef struct s_thread_data
 {

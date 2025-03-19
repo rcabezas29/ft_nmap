@@ -36,20 +36,20 @@ static const char *get_scan_type_name(t_scan_type type)
 {
     switch (type)
     {
-    case SYN:
-        return "SYN";
-    case NUL:
-        return "NULL";
-    case FIN:
-        return "FIN";
-    case XMAS:
-        return "XMAS";
-    case ACK:
-        return "ACK";
-    case UDP:
-        return "UDP";
-    default:
-        return "UNKNOWN";
+		case SYN:
+			return "SYN";
+		case NUL:
+			return "NULL";
+		case FIN:
+			return "FIN";
+		case XMAS:
+			return "XMAS";
+		case ACK:
+			return "ACK";
+		case UDP:
+			return "UDP";
+		default:
+			return "UNKNOWN";
     }
 }
 

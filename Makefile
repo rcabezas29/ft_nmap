@@ -6,7 +6,7 @@ RM = rm -rf
 CC = gcc
 CPPFLAGS = -MMD
 CFLAGS = -Wall -Wextra -Werror
-LDFLAGS = -pthread
+LDFLAGS = -pthread -lpcap
 
 BUILD_DIR := build
 SRC_DIR := srcs

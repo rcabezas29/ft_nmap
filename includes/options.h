@@ -25,7 +25,8 @@ char		**parse_ip(const char *argument);
 
 t_list		*parse_ports(const char *argument);
 
-t_scan_type	parse_scan_type(const char *optarg);
+void		parse_scan_type(t_list **scan_type, const char *optarg);
+t_list		*add_all_scans(void);
 
 int			parse_thread_number(const char *optarg);
 

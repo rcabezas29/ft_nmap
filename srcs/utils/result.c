@@ -1,11 +1,32 @@
 #include <ft_nmap.h>
 
+char	*print_scan_types(t_list *scan_types)
+{
+	char	*str = ft_calloc(1, 1);
+	char	*tmp;
+
+	while (scan_types)
+	{
+		tmp = str;
+		str = ft_strjoin(str, scan_types->content);
+		free(tmp);
+		if (scan_types->next)
+		{
+			tmp = str;
+			str = ft_strjoin(str, " ");
+			free(tmp);
+		}
+		scan_types = scan_types->next;
+	}
+	return (str);
+}
+
 void	print_configurations(t_nmap_config *conf, int i)
 {
 	printf("\nScan Configurations\n");
 	printf("Target Ip-Address : %s\n", conf->ips[i]);
 	printf("No of Ports to scan : %i\n", ft_lstsize(conf->ports));
-	printf("Scans to be performed : %s \n", scantype_tostring(conf->scan_type));
+	printf("Scans to be performed : %s \n", print_scan_types(conf->scan_type));
 	printf("No of threads : %i\n", conf->n_speedup_threads);
 	printf("Scanning...\n");
 	printf("................\n");

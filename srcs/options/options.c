@@ -14,7 +14,7 @@ void parse_long_option(const char *option, const char *argument, t_nmap_config *
 	else if (strcmp(option, "speedup") == 0)
 		conf->n_speedup_threads = parse_thread_number(argument);
 	else if (strcmp(option, "scan") == 0)
-		conf->scan_type = parse_scan_type(argument);
+		parse_scan_type(&conf->scan_type , argument);
 	else if (strcmp(option, "file") == 0)
 		conf->ips = parse_ips_file(argument);
 	else if (strcmp(option, "timeout") == 0)
@@ -33,7 +33,6 @@ void parse_options(int argc, char **argv, t_nmap_config *conf)
 		{"timeout", required_argument, 0, 't'},
 		{0, 0, 0, 0}};
 	int option_index = 0;
-	int default_scans = 0;
 	int mandatory_flag = 0;
 	int c;
 
@@ -76,8 +75,8 @@ void parse_options(int argc, char **argv, t_nmap_config *conf)
 	}
 	if (conf->n_speedup_threads == 0)
 		conf->n_speedup_threads = 1;
-	if (default_scans == 0)
-		conf->scan_type = ALL;
+	if (ft_lstsize(conf->scan_type) == 0)
+		conf->scan_type = add_all_scans();
 	if (conf->ports == NULL)
 		conf->ports = parse_ports("1-1024");
 	if (conf->timeout == 0)

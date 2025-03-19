@@ -28,7 +28,7 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 {
 	t_scan	*scan = malloc(sizeof(t_scan));
 	int		n_ports = ft_lstsize(conf->ports);
-	int		n_scans = conf->scan_type == ALL ? 6 : 1;
+	int		n_scans = ft_lstsize(conf->scan_type);
 
 	scan->ip = ip;
 	scan->n_ports = n_ports;
@@ -40,13 +40,12 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 		scan->port_scan_array[i].port = *(int *)(current_port->content);
 		scan->port_scan_array[i].scans_type = malloc(sizeof(t_scan_type_pair) * n_scans);
 		scan->port_scan_array[i].n_scans = n_scans;
+		t_list	*current_scan = conf->scan_type;
 		for (int j = 0; j < n_scans; ++j)
 		{
-			if (conf->scan_type == ALL)
-				scan->port_scan_array[i].scans_type[j].type = j;
-			else
-				scan->port_scan_array[i].scans_type[j].type = conf->scan_type;
+			scan->port_scan_array[i].scans_type[j].type = string_to_scan_type(current_scan->content);
 			scan->port_scan_array[i].scans_type[j].state = FILTERED;
+			current_scan = current_scan->next;
 		}
 		current_port = current_port->next;
 	}

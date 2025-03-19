@@ -10,8 +10,7 @@ typedef enum	e_scan_type
 	ACK,
 	FIN,
 	XMAS,
-	UDP,
-	ALL
+	UDP
 }	t_scan_type;
 
 typedef enum	e_scan_state
@@ -43,7 +42,7 @@ typedef struct s_scan
 
 typedef struct s_nmap_config
 {
-	t_scan_type	scan_type;
+	t_list		*scan_type;
 	char		**ips;
 	t_list		*ports;
 	int			n_speedup_threads;

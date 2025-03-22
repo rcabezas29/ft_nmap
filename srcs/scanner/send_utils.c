@@ -18,7 +18,7 @@ void	get_local_ip(char *buffer)
 	close(sock);
 }
 
-unsigned short csum(unsigned short *ptr,int nbytes) 
+unsigned short	csum(unsigned short *ptr, int nbytes)
 {
 	register long sum;
 	unsigned short oddbyte;

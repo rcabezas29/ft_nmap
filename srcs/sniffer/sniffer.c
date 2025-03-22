@@ -168,12 +168,16 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 	(void)userData;
 	(void)pkthdr;
     struct ip *ipHeader = (struct ip *)(packet + 14); // Skipping Ethernet header (14 bytes)
+	struct tcphdr *tcph = (struct tcphdr *)(packet + 14 + ipHeader->ip_hl * 4);
     char srcIp[INET_ADDRSTRLEN];
     char dstIp[INET_ADDRSTRLEN];
+	int	port;
     inet_ntop(AF_INET, &(ipHeader->ip_src), srcIp, INET_ADDRSTRLEN);
     inet_ntop(AF_INET, &(ipHeader->ip_dst), dstIp, INET_ADDRSTRLEN);
+	port = ntohs(tcph->source);
 
-    printf("Source IP: %s -> Destination IP: %s\n", srcIp, dstIp);
+
+    printf("Source IP: %s:%i -> Destination IP: %s\n", srcIp, port, dstIp);
 
     if (ipHeader->ip_p == IPPROTO_TCP) {
         printf("TCP Packet Received\n");
@@ -193,36 +197,36 @@ void	sniffer(t_scan *scan, int timeout)
 {
 	struct bpf_program	filter;
 	char				errbuf[PCAP_ERRBUF_SIZE], filter_exp[64];
-    pcap_if_t			*alldevs, *device;
+	pcap_if_t			*alldevs, *device;
 	pcap_t				*handle;
 	pthread_t			sniffer_thread;
 
-    if (pcap_findalldevs(&alldevs, errbuf) == -1)
+	if (pcap_findalldevs(&alldevs, errbuf) == -1)
 	{
-        fprintf(stderr, "Error finding devices: %s\n", errbuf);
-        return ;
-    }
-    device = alldevs;
-    handle = pcap_open_live(device->name, BUFSIZ, 1, 1000, errbuf);
-    if (handle == NULL)
+		fprintf(stderr, "Error finding devices: %s\n", errbuf);
+		return ;
+	}
+	device = alldevs;
+	handle = pcap_open_live(device->name, BUFSIZ, 1, 1000, errbuf);
+	if (handle == NULL)
 	{
-        fprintf(stderr, "Could not open device: %s\n", errbuf);
-        pcap_freealldevs(alldevs);
-        return ;
-    }
-    snprintf(filter_exp, sizeof(filter_exp), "ip src %s and (tcp or udp)", scan->ip);
-    if (pcap_compile(handle, &filter, filter_exp, 0, PCAP_NETMASK_UNKNOWN) == -1 ||
+		fprintf(stderr, "Could not open device: %s\n", errbuf);
+		pcap_freealldevs(alldevs);
+		return ;
+	}
+	snprintf(filter_exp, sizeof(filter_exp), "ip src %s and (tcp or udp)", scan->ip);
+	if (pcap_compile(handle, &filter, filter_exp, 0, PCAP_NETMASK_UNKNOWN) == -1 ||
 		pcap_setfilter(handle, &filter) == -1)
 	{
-        fprintf(stderr, "Failed to set filter: %s\n", pcap_geterr(handle));
-        pcap_freealldevs(alldevs);
-        pcap_close(handle);
-        return ;
-    }
-    pthread_create(&sniffer_thread, NULL, sniffer_loop, handle);
-    usleep(timeout * 1000);
-    pcap_breakloop(handle);
-    pthread_join(sniffer_thread, NULL);
-    pcap_freealldevs(alldevs);
-    pcap_close(handle);
+		fprintf(stderr, "Failed to set filter: %s\n", pcap_geterr(handle));
+		pcap_freealldevs(alldevs);
+		pcap_close(handle);
+		return ;
+	}
+	pthread_create(&sniffer_thread, NULL, sniffer_loop, handle);
+	usleep(timeout * 1000);
+	pcap_breakloop(handle);
+	pthread_join(sniffer_thread, NULL);
+	pcap_freealldevs(alldevs);
+	pcap_close(handle);
 }

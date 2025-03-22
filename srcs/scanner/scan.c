@@ -5,20 +5,30 @@ void	*scanning(t_thread_data *data)
 	int					n_scans = data->scan->port_scan_array[0].n_scans;
 	int					len = data->n_ports * n_scans;
 	int					*sockets = malloc(sizeof(int) * len);
+	int one = 1;
+	const int *val = &one;
 
+	usleep(500);
 	for (int i = 0; i < len; i++)
 	{
 		int port_index = (i + data->start_port_index) / n_scans;
 		int port = data->scan->port_scan_array[port_index].port;
 		t_scan_type st = data->scan->port_scan_array[port_index].scans_type[i % n_scans].type;
 
-		sockets[i] = socket(AF_INET, SOCK_RAW, st == UDP || (data->scan->port_scan_array[0].scans_type[0].type == UDP) ? IPPROTO_UDP : IPPROTO_TCP);
+		sockets[i] = socket(AF_INET, SOCK_RAW, st == UDP ? IPPROTO_UDP : IPPROTO_TCP);
+
+		if (setsockopt(sockets[i], IPPROTO_IP, IP_HDRINCL, val, sizeof (one)) < 0)
+		{
+			printf ("Error setting IP_HDRINCL. Error number : %d . Error message : %s \n" , errno , strerror(errno));
+			exit(0);
+		}
+
 		if (sockets[i] < 0)
 		{
 			perror("Socket creation failed");
 			continue ;
 		}
-		send_port_scan(sockets[i], data->scan->ip, port, st);
+		send_port_scan(sockets[i], data->scan->ip, port, st, data->source_ip);
 		close(sockets[i]);
 	}
 	return NULL;

@@ -6,13 +6,16 @@ void	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 	t_thread_data	*thread_data = malloc(sizeof(t_thread_data) * n_threads);
 	int				ports_per_thread = scan->n_ports / n_threads;
 	int				extra_ports = scan->n_ports % n_threads;
-
+	char			source_ip[20];
+	
+	get_local_ip(source_ip);
 	for (int i = 0; i < n_threads; i++)
 	{
 		thread_data[i].scan = scan;
 		thread_data[i].n_ports = ports_per_thread + (i < extra_ports ? 1 : 0);
 		thread_data[i].start_port_index = i * ports_per_thread + (i < extra_ports ? i : extra_ports);
 		thread_data[i].end_port_index = thread_data[i].start_port_index + thread_data[i].n_ports - 1;
+		thread_data[i].source_ip = source_ip;
 		if (pthread_create(&threads[i], NULL, (void *(*)(void *))scanning, &thread_data[i]) != 0)
 		{
 			perror("pthread_create failed");

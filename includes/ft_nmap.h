@@ -10,6 +10,7 @@
 #include <pthread.h>
 #include <pcap.h>
 #include <signal.h>
+#include <errno.h>
 
 typedef struct s_thread_data
 {
@@ -17,9 +18,10 @@ typedef struct s_thread_data
 	int		start_port_index;
 	int		end_port_index;
 	int		n_ports;
+	char	*source_ip;
 }		t_thread_data;
 
-void	process_packet(unsigned char *buffer, t_scan *scan);
+void	process_packet(t_scan *scan, unsigned char *buffer);
 void	sniffer(t_scan *scan, int timeout);
 
 t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip);
@@ -32,7 +34,7 @@ unsigned short csum(unsigned short *ptr,int nbytes);
 void	*scanning(t_thread_data *data);
 t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip);
 
-void	send_port_scan(int socket, char *ip, int port, t_scan_type type);
+void	send_port_scan(int socket, char *ip, int port, t_scan_type type, char *source_ip);
 
 void	print_scan_result(t_scan *scan);
 

@@ -9,9 +9,8 @@ struct pseudo_header
 	u_int8_t	protocol;
 };
 
-void	send_port_scan(int socket, char *ip, int port, t_scan_type type, char *source_ip)
+void	send_port_scan(int socket, char *ip, int port, t_scan_type_info *sti, char *source_ip)
 {
-	(void)type;
 	char					packet[4096];
 	struct sockaddr_in		dest;
 	struct iphdr			*iph = (struct iphdr *)packet;
@@ -33,7 +32,6 @@ void	send_port_scan(int socket, char *ip, int port, t_scan_type type, char *sour
 	iph->frag_off = 0;
 	iph->ttl = 64;
 	iph->protocol = IPPROTO_TCP;
-	iph->check = 0;
 	iph->saddr = inet_addr(source_ip);
 	iph->daddr = dest.sin_addr.s_addr;
 	iph->check = csum((unsigned short *)packet, sizeof(struct iphdr));
@@ -51,8 +49,9 @@ void	send_port_scan(int socket, char *ip, int port, t_scan_type type, char *sour
 	tcph->psh = 0;
 	tcph->urg = 0;
 	tcph->window = htons(65535);
-	tcph->check = 0;
 	tcph->urg_ptr = 0;
+
+	sti->source_port = ntohs(tcph->source);
 
 	// Pseudo Header for Checksum
 	psh.source_address = inet_addr(source_ip);

@@ -34,7 +34,8 @@ unsigned short csum(unsigned short *ptr,int nbytes);
 void	*scanning(t_thread_data *data);
 t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip);
 
-void	send_port_scan(int socket, char *ip, int port, t_scan_type type, char *source_ip);
+void	send_port_scan(int socket, char *ip, int port, t_scan_type_info *sti, char *source_ip);
+
 
 void	print_scan_result(t_scan *scan);
 

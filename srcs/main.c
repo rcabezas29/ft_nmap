@@ -70,6 +70,7 @@ int	main(int argc, char **argv)
 	}
 	ft_lstclear(&conf->ports, free);
 	double_free(conf->ips);
+	free(conf->scan_type);
 	free(conf);
 
 	return 0;

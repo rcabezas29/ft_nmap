@@ -23,13 +23,16 @@ char	*print_scan_types(t_list *scan_types)
 
 void	print_configurations(t_nmap_config *conf, int i)
 {
+	char	*scan_types = print_scan_types(conf->scan_type);
+
 	printf("\nScan Configurations\n");
 	printf("Target Ip-Address : %s\n", conf->ips[i]);
 	printf("No of Ports to scan : %i\n", ft_lstsize(conf->ports));
-	printf("Scans to be performed : %s \n", print_scan_types(conf->scan_type));
+	printf("Scans to be performed : %s \n", scan_types);
 	printf("No of threads : %i\n", conf->n_speedup_threads);
 	printf("Scanning...\n");
 	printf("................\n");
+	free(scan_types);
 }
 
 static const char *get_scan_type_name(t_scan_type type)

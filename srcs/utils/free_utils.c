@@ -13,6 +13,7 @@ void	free_scan_struct(t_scan *scan, t_nmap_config *conf)
 
 	for (int i = 0; i < n_ports; ++i)
 		free(scan->port_scan_array[i].scans_type);
+	ft_lstclear(&conf->scan_type, free);
 	free(scan->port_scan_array);
 	free(scan);
 }

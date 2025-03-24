@@ -20,15 +20,16 @@ typedef enum	e_scan_state
 	CLOSED
 }	t_scan_state;
 
-typedef	struct	u_scan_type_pair
+typedef	struct	u_scan_type_info
 {
 	t_scan_type		type;
 	t_scan_state	state;
-}	t_scan_type_pair;
+	int				source_port;
+}	t_scan_type_info;
 
 typedef struct	s_port_scan
 {
-	t_scan_type_pair	*scans_type;
+	t_scan_type_info	*scans_type;
 	int					port;
 	int					n_scans;
 }	t_port_scan;

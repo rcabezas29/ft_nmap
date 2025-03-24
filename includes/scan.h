@@ -17,7 +17,9 @@ typedef enum	e_scan_state
 {
 	FILTERED,
 	OPEN,
-	CLOSED
+	CLOSED,
+	OPEN_FILTERED,
+	UNFILTERED
 }	t_scan_state;
 
 typedef	struct	u_scan_type_info

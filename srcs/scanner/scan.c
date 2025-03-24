@@ -55,7 +55,7 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 		for (int j = 0; j < n_scans; ++j)
 		{
 			scan->port_scan_array[i].scans_type[j].type = string_to_scan_type(current_scan->content);
-			scan->port_scan_array[i].scans_type[j].state = FILTERED;
+			scan->port_scan_array[i].scans_type[j].state =  (scan->port_scan_array[i].scans_type[j].type == SYN || scan->port_scan_array[i].scans_type[j].type == ACK) ? FILTERED : OPEN_FILTERED;
 			current_scan = current_scan->next;
 		}
 		current_port = current_port->next;

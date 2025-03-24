@@ -17,3 +17,11 @@ void	free_scan_struct(t_scan *scan, t_nmap_config *conf)
 	free(scan->port_scan_array);
 	free(scan);
 }
+
+void	free_conf(t_nmap_config *conf)
+{
+	ft_lstclear(&conf->ports, free);
+	double_free(conf->ips);
+	free(conf->scan_type);
+	free(conf);
+}

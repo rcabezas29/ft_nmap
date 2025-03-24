@@ -10,5 +10,6 @@ char	*scantype_tostring(t_scan_type scan);
 t_scan_type	string_to_scan_type(const char *str);
 void	free_scan_struct(t_scan *scan, t_nmap_config *conf);
 void	print_configurations(t_nmap_config *conf, int i);
+void	free_conf(t_nmap_config *conf);
 
 #endif

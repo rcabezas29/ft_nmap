@@ -5,6 +5,8 @@
 #include <time.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
+#include <netinet/udp.h>
+#include <netinet/ip_icmp.h>
 #include <sys/time.h>
 #include <poll.h>
 #include <pthread.h>

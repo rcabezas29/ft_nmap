@@ -68,10 +68,6 @@ int	main(int argc, char **argv)
 		print_configurations(conf, i);
 		scan(conf, i);
 	}
-	ft_lstclear(&conf->ports, free);
-	double_free(conf->ips);
-	free(conf->scan_type);
-	free(conf);
-
+	free_conf(conf);
 	return 0;
 }

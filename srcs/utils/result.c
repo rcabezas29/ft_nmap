@@ -58,17 +58,21 @@ static const char *get_scan_type_name(t_scan_type type)
 
 static const char *get_scan_state_name(t_scan_state state)
 {
-    switch (state)
-    {
-    case FILTERED:
-        return "Filtered";
-    case OPEN:
-        return "Open";
-    case CLOSED:
-        return "Closed";
-    default:
-        return "Unknown";
-    }
+	switch (state)
+	{
+		case FILTERED:
+			return "Filtered";
+		case OPEN:
+			return "Open";
+		case CLOSED:
+			return "Closed";
+		case OPEN_FILTERED:
+			return "Open|Filtered";
+		case UNFILTERED:
+			return "Unfiltered";
+		default:
+			return "Unknown";
+	}
 }
 
 char    *get_service_name(int port)
@@ -84,57 +88,57 @@ char    *get_service_name(int port)
 
 void print_scan_result(t_scan *scan)
 {
-    printf("Open ports:\n");
-    printf("Port    Service Name (if applicable)    Results                      Conclusion\n");
-    printf("-------------------------------------------------------------------------------\n");
-    
-    for (int i = 0; i < scan->n_ports; i++)
-    {
-        t_port_scan *port_scan = &scan->port_scan_array[i];
-        int open = 0;
-        for (int j = 0; j < port_scan->n_scans; j++)
-        {
-            if (port_scan->scans_type[j].state == OPEN)
-            {
-                open = 1;
-                break;
-            }
-        }
-        if (open)
-        {
-            printf("%-7d %-32s ", port_scan->port, get_service_name(port_scan->port)); // Assuming http as a placeholder
-            for (int j = 0; j < port_scan->n_scans; j++)
-            {
-                printf("%s(%s) ", get_scan_type_name(port_scan->scans_type[j].type), get_scan_state_name(port_scan->scans_type[j].state));
-            }
-            printf("Open\n");
-        }
-    }
-    
-    printf("\nClosed/Filtered/Unfiltered ports:\n");
-    printf("Port    Service Name (if applicable)    Results                      Conclusion\n");
-    printf("-------------------------------------------------------------------------------\n");
-    
-    for (int i = 0; i < scan->n_ports; i++)
-    {
-        t_port_scan *port_scan = &scan->port_scan_array[i];
-        int open = 0;
-        for (int j = 0; j < port_scan->n_scans; j++)
-        {
-            if (port_scan->scans_type[j].state == OPEN)
-            {
-                open = 1;
-                break;
-            }
-        }
-        if (!open)
-        {
-            printf("%-7d %-32s ", port_scan->port, get_service_name(port_scan->port));
-            for (int j = 0; j < port_scan->n_scans; j++)
-            {
-                printf("%s(%s) ", get_scan_type_name(port_scan->scans_type[j].type), get_scan_state_name(port_scan->scans_type[j].state));
-            }
-            printf("Closed\n");
-        }
-    }
+	printf("Open ports:\n");
+	printf("Port    Service Name (if applicable)    Results                      Conclusion\n");
+	printf("-------------------------------------------------------------------------------\n");
+
+	for (int i = 0; i < scan->n_ports; i++)
+	{
+		t_port_scan *port_scan = &scan->port_scan_array[i];
+		int open = 0;
+		for (int j = 0; j < port_scan->n_scans; j++)
+		{
+			if (port_scan->scans_type[j].state == OPEN)
+			{
+				open = 1;
+				break;
+			}
+		}
+		if (open)
+		{
+			printf("%-7d %-32s ", port_scan->port, get_service_name(port_scan->port)); // Assuming http as a placeholder
+			for (int j = 0; j < port_scan->n_scans; j++)
+			{
+				printf("%s(%s) ", get_scan_type_name(port_scan->scans_type[j].type), get_scan_state_name(port_scan->scans_type[j].state));
+			}
+			printf("%10s\n", "Open");
+		}
+	}
+
+	printf("\nClosed/Filtered/Unfiltered ports:\n");
+	printf("Port    Service Name (if applicable)    Results                      Conclusion\n");
+	printf("-------------------------------------------------------------------------------\n");
+
+	for (int i = 0; i < scan->n_ports; i++)
+	{
+		t_port_scan *port_scan = &scan->port_scan_array[i];
+		int open = 0;
+		for (int j = 0; j < port_scan->n_scans; j++)
+		{
+			if (port_scan->scans_type[j].state == OPEN)
+			{
+				open = 1;
+				break;
+			}
+		}
+		if (!open)
+		{
+			printf("%-7d %-32s ", port_scan->port, get_service_name(port_scan->port));
+			for (int j = 0; j < port_scan->n_scans; j++)
+			{
+				printf("%s(%s) ", get_scan_type_name(port_scan->scans_type[j].type), get_scan_state_name(port_scan->scans_type[j].state));
+			}
+			printf("%10s\n", "Closed");
+		}
+	}
 }

@@ -55,7 +55,7 @@ char	**parse_ips_file(const char *argument)
 		printf("unable to find file (%s)\n", argument);
 		exit(EXIT_FAILURE);
 	}
-	ips = malloc(count_ip_file_length(argument) * sizeof(char *));
+	ips = malloc((count_ip_file_length(argument) + 1) * sizeof(char *));
 	i = 0;
 	fseek(fp, 0, SEEK_SET);
 	while ((getline(&line, &len, fp)) != -1)
@@ -67,6 +67,7 @@ char	**parse_ips_file(const char *argument)
 			ips[i] = get_ip_from_domain(line);
 		i++;
 	}
+	free(line);
 	ips[i] = NULL;
 	fclose(fp);
 	return ips;

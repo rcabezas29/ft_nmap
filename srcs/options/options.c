@@ -59,9 +59,7 @@ void parse_options(int argc, char **argv, t_nmap_config *conf)
 			mandatory_flag += 1;
 		}
 		else if (c == 't')
-		{
 			conf->timeout = parse_timeout(optarg);
-		}
 	}
 	if (optind < argc)
 	{

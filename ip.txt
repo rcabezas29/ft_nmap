@@ -1,0 +1,3 @@
+nmap.scanme.org
+rcabezas-home-rpi.duckdns.org
+google.com

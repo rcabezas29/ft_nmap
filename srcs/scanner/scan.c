@@ -8,24 +8,24 @@ void	*scanning(t_thread_data *data)
 	int one = 1;
 	const int *val = &one;
 
-	usleep(500);
+	while (data->scan->ready_to_send == false)
+		usleep(500);
 	for (int i = 0; i < len; i++)
 	{
-		int port_index = (i + data->start_port_index) / n_scans;
+		int port_index = data->start_port_index + i / n_scans;
 		int port = data->scan->port_scan_array[port_index].port;
 		t_scan_type_info	*sti = &(data->scan->port_scan_array[port_index].scans_type[i % n_scans]);
 
 		sockets[i] = socket(AF_INET, SOCK_RAW, sti->type == UDP ? IPPROTO_UDP : IPPROTO_TCP);
-
-		if (setsockopt(sockets[i], IPPROTO_IP, IP_HDRINCL, val, sizeof (one)) < 0)
-		{
-			printf("Error setting IP_HDRINCL. Error number : %d . Error message : %s \n" , errno , strerror(errno));
-			exit(1);
-		}
 		if (sockets[i] < 0)
 		{
 			perror("Socket creation failed");
 			continue ;
+		}
+		if (setsockopt(sockets[i], IPPROTO_IP, IP_HDRINCL, val, sizeof (one)) < 0)
+		{
+			printf("Error setting IP_HDRINCL. Error number : %d . Error message : %s \n" , errno , strerror(errno));
+			exit(1);
 		}
 		send_port_scan(sockets[i], data->scan->ip, port, sti, data->source_ip);
 		close(sockets[i]);
@@ -60,5 +60,6 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 		}
 		current_port = current_port->next;
 	}
+	scan->ready_to_send = false;
 	return scan;
 }

@@ -6,7 +6,6 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <string.h>
-#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>

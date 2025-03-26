@@ -2,6 +2,7 @@
 #define SCAN_H
 
 #include <libft.h>
+#include <stdbool.h>
 
 typedef enum	e_scan_type
 {
@@ -41,6 +42,7 @@ typedef struct s_scan
 	t_port_scan	*port_scan_array;
 	char		*ip;
 	int			n_ports;
+	bool		ready_to_send;
 }		t_scan;
 
 typedef struct s_nmap_config

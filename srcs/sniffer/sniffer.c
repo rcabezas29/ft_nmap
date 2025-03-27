@@ -151,7 +151,7 @@ void	sniffer(t_scan *scan, int timeout)
 		fprintf(stderr, "Couldn't get netmask for device %s: %s\n", device->name, errbuf);
 		return ;
 	}
-	handle = pcap_open_live(device->name, BUFSIZ, 1, 1000, errbuf);
+	handle = pcap_open_live(device->name, BUFSIZ, 1, 100, errbuf);
 	if (handle == NULL)
 	{
 		fprintf(stderr, "Could not open device: %s\n", errbuf);

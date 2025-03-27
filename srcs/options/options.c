@@ -78,7 +78,7 @@ void parse_options(int argc, char **argv, t_nmap_config *conf)
 	if (conf->ports == NULL)
 		conf->ports = parse_ports("1-1024");
 	if (conf->timeout == 0)
-		conf->timeout = 1000;
+		conf->timeout = 500;
 	if (ft_lstsize(conf->ports) > 1024)
 	{
 		printf("Ports cannot be more than 1024\n");

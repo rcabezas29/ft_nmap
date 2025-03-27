@@ -27,8 +27,8 @@ void parse_options(int argc, char **argv, t_nmap_config *conf)
 		{"help", no_argument, 0, 'h'},
 		{"ports", required_argument, 0, 'p'},
 		{"ip", required_argument, 0, 0},
-		{"speedup", required_argument, 0, 's'},
-		{"scan", required_argument, 0, 0},
+		{"speedup", required_argument, 0, 0},
+		{"scan", required_argument, 0, 's'},
 		{"file", required_argument, 0, 'f'},
 		{"timeout", required_argument, 0, 't'},
 		{0, 0, 0, 0}};
@@ -52,7 +52,7 @@ void parse_options(int argc, char **argv, t_nmap_config *conf)
 		else if (c == 'p')
 			conf->ports = parse_ports(optarg);
 		else if (c == 's')
-			conf->n_speedup_threads = parse_thread_number(optarg);
+			parse_scan_type(&conf->scan_type , optarg);
 		else if (c == 'f')
 		{
 			conf->ips = parse_ips_file(optarg);
@@ -69,6 +69,7 @@ void parse_options(int argc, char **argv, t_nmap_config *conf)
 	if (mandatory_flag != 1)
 	{
 		printf("There are some mandatory flags that must be set: --ip/--file\n");
+		print_help();
 		exit(EXIT_FAILURE);
 	}
 	if (conf->n_speedup_threads == 0)

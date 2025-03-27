@@ -6,4 +6,5 @@ RUN apt install -y \
 	build-essential \
 	git \
 	nmap \
-	libpcap-dev
+	libpcap-dev \
+	tcpdump

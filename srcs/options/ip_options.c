@@ -45,7 +45,7 @@ char	**parse_ips_file(const char *argument)
 {
 	FILE	*fp;
 	char	**ips;
-	char	*line;
+	char	*line = NULL;
 	size_t	len;
 	int		i;
 

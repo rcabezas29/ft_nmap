@@ -37,6 +37,9 @@ $(NAME): $(LDLIBS) $(OBJS)
 sanitize:: CFLAGS += -g3 -fsanitize=address -fsanitize=leak -fsanitize=undefined -fsanitize=bounds -fsanitize=null
 sanitize:: fclean $(NAME)
 
+thread:: CFLAGS += -g3 -fsanitize=thread
+thread:: fclean $(NAME)
+
 $(BUILD_DIR)/%.o: %.c
 	mkdir -p $(dir $@)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<

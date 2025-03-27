@@ -1,5 +1,19 @@
 #include <options.h>
 
+static bool	is_valid_port_options(const char *argument)
+{
+	int	i;
+
+	i = 0;
+	while (argument[i])
+	{
+		if (argument[i] != ',' && argument[i] != '-' && !ft_isdigit(argument[i]))
+			return false;
+		i++;
+	}
+	return true;
+}
+
 static void	parse_port_ranges(char *commas, t_list **ports)
 {
 	char	**range;
@@ -29,9 +43,15 @@ static void	parse_port_ranges(char *commas, t_list **ports)
 
 t_list	*parse_ports(const char *argument)
 {
-	char	**commas = ft_split(argument, ',');
+	char	**commas;
 	t_list	*ports = NULL;
 
+	if (!is_valid_port_options(argument))
+	{
+		write(STDERR_FILENO, "Error: Invalid port option\n", 28);
+		exit(EXIT_FAILURE);
+	}
+	commas = ft_split(argument, ',');
 	for (int i = 0; commas[i]; ++i)
 	{
 		if (ft_strchr(commas[i], '-'))

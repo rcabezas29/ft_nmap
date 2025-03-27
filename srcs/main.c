@@ -1,12 +1,13 @@
 #include <ft_nmap.h>
 
-void	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
+float	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 {
 	pthread_t		threads[n_threads];
 	t_thread_data	*thread_data = malloc(sizeof(t_thread_data) * n_threads);
 	int				ports_per_thread = scan->n_ports / n_threads;
 	int				extra_ports = scan->n_ports % n_threads;
 	char			source_ip[20];
+	struct timeval	start, end;
 	
 	get_local_ip(source_ip);
 	for (int i = 0; i < n_threads; i++)
@@ -23,7 +24,9 @@ void	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 			exit(EXIT_FAILURE);
 		}
 	}
+	gettimeofday(&start, NULL);
 	sniffer(scan, timeout);
+	gettimeofday(&end, NULL);
 	for (int i = 0; i < n_threads; i++)
 	{
 		if (pthread_join(threads[i], NULL) != 0)
@@ -33,18 +36,17 @@ void	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 		}
 	}
     free(thread_data);
+	return (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
 }
 
 void	scan(t_nmap_config *conf, int i)
 {
-	struct timeval end, start;
-	t_scan	*scan = create_scan_result_struct(conf, conf->ips[i]);
+	t_scan		*scan = create_scan_result_struct(conf, conf->ips[i]);
+	float		scan_time;
 
-	gettimeofday(&start, NULL);
-	iterate_over_every_port(scan, conf->n_speedup_threads, conf->timeout);
-	gettimeofday(&end, NULL);
+	scan_time = iterate_over_every_port(scan, conf->n_speedup_threads, conf->timeout);
 
-	printf("Scan took %f secs\n", (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0);
+	printf("Scan took %f secs\n", scan_time);
 	printf("IP address: %s\n", conf->ips[i]);
 	print_scan_result(scan);
 

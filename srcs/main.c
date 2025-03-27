@@ -35,7 +35,7 @@ float	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 			exit(EXIT_FAILURE);
 		}
 	}
-    free(thread_data);
+	free(thread_data);
 	return (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
 }
 

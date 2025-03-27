@@ -14,6 +14,8 @@
 #include <signal.h>
 #include <errno.h>
 
+#define ETHERNET_HEADER_SIZE 14
+
 typedef struct s_thread_data
 {
 	t_scan	*scan;

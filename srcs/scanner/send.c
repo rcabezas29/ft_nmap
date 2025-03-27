@@ -35,7 +35,6 @@ void	send_udp_scan(char *packet, int port, t_scan_type_info *sti, char *ip, char
 
 	sti->source_port = ntohs(udph->source);
 
-	// Pseudo Header for Checksum
 	psh.source_address = inet_addr(source_ip);
 	psh.dest_address = inet_addr(ip);
 	psh.placeholder = 0;
@@ -65,7 +64,6 @@ void	send_tcp_scan(char *packet, int port, t_scan_type_info *sti, char *ip, char
 
 	sti->source_port = ntohs(tcph->source);
 
-	// Pseudo Header for Checksum
 	psh.source_address = inet_addr(source_ip);
 	psh.dest_address = inet_addr(ip);
 	psh.placeholder = 0;
@@ -91,7 +89,6 @@ void	send_port_scan(int socket, char *ip, int port, t_scan_type_info *sti, char 
 
 	memset(packet, 0, sizeof(packet));
 
-	// Fill IP Header
 	iph->ihl = 5;
 	iph->version = 4;
 	iph->tos = 0;
@@ -108,7 +105,5 @@ void	send_port_scan(int socket, char *ip, int port, t_scan_type_info *sti, char 
 		send_udp_scan(packet, port, sti, ip, source_ip);
 	else
 		send_tcp_scan(packet, port, sti, ip, source_ip);
-
-	// Send Packet
 	sendto(socket, packet, iph->tot_len, 0, (struct sockaddr *)&dest, sizeof(dest));
 }

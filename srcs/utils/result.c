@@ -37,8 +37,8 @@ void	print_configurations(t_nmap_config *conf, int i)
 
 static const char *get_scan_type_name(t_scan_type type)
 {
-    switch (type)
-    {
+	switch (type)
+	{
 		case SYN:
 			return "SYN";
 		case NUL:
@@ -53,7 +53,7 @@ static const char *get_scan_type_name(t_scan_type type)
 			return "UDP";
 		default:
 			return "UNKNOWN";
-    }
+	}
 }
 
 static const char *get_scan_state_name(t_scan_state state)
@@ -75,15 +75,15 @@ static const char *get_scan_state_name(t_scan_state state)
 	}
 }
 
-char    *get_service_name(int port)
+char	*get_service_name(int port)
 {
-    struct servent *service = getservbyport(htons(port), "tcp");
-    if (service)
-        return service->s_name;
-    service = getservbyport(htons(port), "udp");
-    if (service)
-        return service->s_name;
-    return "Unassigned";
+	struct servent *service = getservbyport(htons(port), "tcp");
+	if (service)
+		return service->s_name;
+	service = getservbyport(htons(port), "udp");
+	if (service)
+		return service->s_name;
+	return "Unassigned";
 }
 
 void print_scan_result(t_scan *scan)
@@ -106,7 +106,7 @@ void print_scan_result(t_scan *scan)
 		}
 		if (open)
 		{
-			printf("%-7d %-32s ", port_scan->port, get_service_name(port_scan->port)); // Assuming http as a placeholder
+			printf("%-7d %-32s ", port_scan->port, get_service_name(port_scan->port));
 			for (int j = 0; j < port_scan->n_scans; j++)
 			{
 				printf("%s(%s) ", get_scan_type_name(port_scan->scans_type[j].type), get_scan_state_name(port_scan->scans_type[j].state));

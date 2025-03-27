@@ -51,8 +51,8 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 
 void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 {
-	struct icmphdr	*icmph = (struct icmphdr *)(packet + 14 + ipHeader->ip_hl * 4);
-	struct ip		*orig_ip = (struct ip *)((packet + 14) + (ipHeader->ip_hl * 4) + sizeof(icmph));
+	struct icmphdr	*icmph = (struct icmphdr *)(packet + ETHERNET_HEADER_SIZE + ipHeader->ip_hl * 4);
+	struct ip		*orig_ip = (struct ip *)((packet + ETHERNET_HEADER_SIZE) + (ipHeader->ip_hl * 4) + sizeof(icmph));
 	t_port_scan		*port_scan = g_port_scan;
 	int				i = 0;
 
@@ -87,7 +87,7 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 {
 	(void)userData;
 	(void)pkthdr;
-	struct ip *ipHeader = (struct ip *)(packet + 14); // Skipping Ethernet header (14 bytes)
+	struct ip *ipHeader = (struct ip *)(packet + ETHERNET_HEADER_SIZE);
 	char srcIp[INET_ADDRSTRLEN];
 	char dstIp[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &(ipHeader->ip_src), srcIp, INET_ADDRSTRLEN);
@@ -95,12 +95,12 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 
 	if (ipHeader->ip_p == IPPROTO_TCP)
 	{
-		struct tcphdr *tcph = (struct tcphdr *)(packet + 14 + ipHeader->ip_hl * 4);
+		struct tcphdr *tcph = (struct tcphdr *)(packet + ETHERNET_HEADER_SIZE + ipHeader->ip_hl * 4);
 		manage_tcp_scan_response(tcph);
 	}
 	else if (ipHeader->ip_p == IPPROTO_UDP)
 	{
-		struct udphdr *udph = (struct udphdr *)(packet + 14 + ipHeader->ip_hl * 4);
+		struct udphdr *udph = (struct udphdr *)(packet + ETHERNET_HEADER_SIZE + ipHeader->ip_hl * 4);
 		manage_udp_scan_response(udph);
 	}
 	else if (ipHeader->ip_p == IPPROTO_ICMP)
@@ -111,8 +111,8 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 void	*sniffer_loop(void *handle)
 {
 	g_received_responses = 0;
-    pcap_loop((pcap_t *)handle, 0, packet_handler, NULL);
-    return NULL;
+	pcap_loop((pcap_t *)handle, 0, packet_handler, NULL);
+	return NULL;
 }
 
 void	wait_for_responses(t_scan *scan, int timeout)

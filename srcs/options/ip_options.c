@@ -1,11 +1,11 @@
 #include <options.h>
 
-bool is_valid_ip(const char *ip)
+bool		is_valid_ip(const char *ip)
 {
-    struct sockaddr_in	sa;
+	struct sockaddr_in	sa;
 
-    int result = inet_pton(AF_INET, ip, &(sa.sin_addr));
-    return result != 0;
+	int result = inet_pton(AF_INET, ip, &(sa.sin_addr));
+	return result != 0;
 }
 
 static int	count_ip_file_length(const char *argument)

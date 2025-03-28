@@ -26,14 +26,14 @@ typedef struct s_thread_data
 }		t_thread_data;
 
 void	process_packet(t_scan *scan, unsigned char *buffer);
-void	sniffer(t_scan *scan, int timeout);
+void	sniffer(t_scan *scan, int timeout, char *ip);
 
 t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip);
 void	free_scan_struct(t_scan *scan, t_nmap_config *conf);
 
 
-void	get_local_ip(char *buffer);
-unsigned short csum(unsigned short *ptr,int nbytes);
+void			get_local_ip(const char *dest_ip, char *ip_buffer);
+unsigned short	csum(unsigned short *ptr,int nbytes);
 
 void	*scanning(t_thread_data *data);
 t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip);

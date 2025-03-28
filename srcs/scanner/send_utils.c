@@ -1,20 +1,34 @@
 #include <ft_nmap.h>
 
-void	get_local_ip(char *buffer)
+void	get_local_ip(const char *dest_ip, char *ip_buffer)
 {
-	struct sockaddr_in	serv, name;
-	const char*			kGoogleDnsIp = "8.8.8.8";
-	int					dns_port = 53;
-	int					sock = socket(AF_INET, SOCK_DGRAM, 0);
-
+	struct sockaddr_in name, serv;
+	socklen_t namelen;
+	int sock = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sock < 0)
+	{
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}
 	memset(&serv, 0, sizeof(serv));
 	serv.sin_family = AF_INET;
-	serv.sin_addr.s_addr = inet_addr(kGoogleDnsIp);
-	serv.sin_port = htons(dns_port);
-	connect(sock, (const struct sockaddr*)&serv, sizeof(serv));
-	socklen_t namelen = sizeof(name);
-	getsockname(sock, (struct sockaddr*) &name, &namelen);
-	inet_ntop(AF_INET, &name.sin_addr, buffer, 100);
+	serv.sin_addr.s_addr = inet_addr(dest_ip);
+	serv.sin_port = htons(80);
+
+	if (connect(sock, (const struct sockaddr*) &serv, sizeof(serv)) < 0)
+	{
+		perror("connect");
+		close(sock);
+		exit(EXIT_FAILURE);
+	}
+	namelen = sizeof(name);
+	if (getsockname(sock, (struct sockaddr*) &name, &namelen) < 0)
+	{
+		perror("getsockname");
+		close(sock);
+		exit(EXIT_FAILURE);
+	}
+	inet_ntop(AF_INET, &name.sin_addr, ip_buffer, INET_ADDRSTRLEN);
 	close(sock);
 }
 

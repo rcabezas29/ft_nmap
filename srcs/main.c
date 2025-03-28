@@ -6,10 +6,10 @@ float	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 	t_thread_data	*thread_data = malloc(sizeof(t_thread_data) * n_threads);
 	int				ports_per_thread = scan->n_ports / n_threads;
 	int				extra_ports = scan->n_ports % n_threads;
-	char			source_ip[20];
+	char			*source_ip = malloc(INET_ADDRSTRLEN);
 	struct timeval	start, end;
 	
-	get_local_ip(source_ip);
+	get_local_ip(scan->ip, source_ip);
 	for (int i = 0; i < n_threads; i++)
 	{
 		thread_data[i].scan = scan;
@@ -25,7 +25,7 @@ float	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 		}
 	}
 	gettimeofday(&start, NULL);
-	sniffer(scan, timeout);
+	sniffer(scan, timeout, scan->ip);
 	gettimeofday(&end, NULL);
 	for (int i = 0; i < n_threads; i++)
 	{
@@ -35,6 +35,7 @@ float	iterate_over_every_port(t_scan *scan, int n_threads, int timeout)
 			exit(EXIT_FAILURE);
 		}
 	}
+	free(source_ip);
 	free(thread_data);
 	return (end.tv_sec - start.tv_sec) + (end.tv_usec - start.tv_usec) / 1000000.0;
 }

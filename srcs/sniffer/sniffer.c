@@ -11,7 +11,10 @@ void	manage_udp_scan_response(struct udphdr *udph)
 	while (port_scan[i].port != -1)
 	{
 		if (port_scan[i].port == ntohs(udph->source) && port_scan[i].scans_type->source_port == ntohs(udph->dest))
+		{
 			port_scan[i].scans_type->state = OPEN;
+			++g_received_responses;
+		}
 		i++;
 	}
 }
@@ -31,8 +34,6 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 					port_scan[i].scans_type->state = OPEN;
 				else if (tcph->rst)
 					port_scan[i].scans_type->state = CLOSED;
-				else
-					port_scan[i].scans_type->state = FILTERED;
 			}
 			else if (port_scan[i].scans_type->type == NUL || port_scan[i].scans_type->type == FIN || port_scan[i].scans_type->type == XMAS)
 			{
@@ -44,8 +45,9 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 				if (tcph->rst)
 					port_scan[i].scans_type->state = UNFILTERED;
 			}
+			++g_received_responses;
 		}
-		i++;
+		++i;
 	}
 }
 
@@ -62,8 +64,11 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 		{
 			struct tcphdr	*orig_tcp = (struct tcphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
 			if (port_scan[i].port == ntohs(orig_tcp->dest) && port_scan[i].scans_type->source_port == ntohs(orig_tcp->source))
+			{
 				if (icmph->type == ICMP_DEST_UNREACH)
 					port_scan[i].scans_type->state = FILTERED;
+				++g_received_responses;
+			}
 		}
 		else if (orig_ip->ip_p == IPPROTO_UDP)
 		{
@@ -77,6 +82,7 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 					else
 						port_scan[i].scans_type->state = FILTERED;
 				}
+				++g_received_responses;
 			}
 		}
 		i++;
@@ -88,10 +94,7 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 	(void)userData;
 	(void)pkthdr;
 	struct ip *ipHeader = (struct ip *)(packet + ETHERNET_HEADER_SIZE);
-	char srcIp[INET_ADDRSTRLEN];
-	char dstIp[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &(ipHeader->ip_src), srcIp, INET_ADDRSTRLEN);
-	inet_ntop(AF_INET, &(ipHeader->ip_dst), dstIp, INET_ADDRSTRLEN);
+
 
 	if (ipHeader->ip_p == IPPROTO_TCP)
 	{
@@ -105,7 +108,6 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 	}
 	else if (ipHeader->ip_p == IPPROTO_ICMP)
 		manage_icmp_scan_response(packet, ipHeader);
-	++g_received_responses;
 }
 
 void	*sniffer_loop(void *handle)
@@ -130,7 +132,7 @@ void	wait_for_responses(t_scan *scan, int timeout)
 	}
 }
 
-void	sniffer(t_scan *scan, int timeout)
+void	sniffer(t_scan *scan, int timeout, char *ip)
 {
 	struct bpf_program	filter;
 	char				errbuf[PCAP_ERRBUF_SIZE], filter_exp[64];
@@ -139,13 +141,29 @@ void	sniffer(t_scan *scan, int timeout)
 	pthread_t			sniffer_thread;
 	bpf_u_int32			netp, maskp;
 
-
 	if (pcap_findalldevs(&alldevs, errbuf) == -1 || alldevs == NULL)
 	{
 		fprintf(stderr, "Error finding devices: %s\n", errbuf);
 		return ;
 	}
-	device = alldevs;
+	if (strcmp(ip, "127.0.0.1") == 0)
+	{
+		device = alldevs;
+		while (device)
+		{
+			if (device->flags & PCAP_IF_LOOPBACK)
+				break ;
+			device = device->next;
+		}
+		if (device == NULL)
+		{
+			fprintf(stderr, "No loopback device found\n");
+			pcap_freealldevs(alldevs);
+			return ;
+		}
+	}
+	else
+		device = alldevs;
 	if (pcap_lookupnet(device->name, &netp, &maskp, errbuf) == -1)
 	{
 		fprintf(stderr, "Couldn't get netmask for device %s: %s\n", device->name, errbuf);

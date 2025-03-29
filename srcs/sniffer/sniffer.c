@@ -10,10 +10,13 @@ void	manage_udp_scan_response(struct udphdr *udph)
 
 	while (port_scan[i].port != -1)
 	{
-		if (port_scan[i].port == ntohs(udph->source) && port_scan[i].scans_type->source_port == ntohs(udph->dest))
+		for (int j = 0; j < port_scan[i].n_scans; ++j)
 		{
-			port_scan[i].scans_type->state = OPEN;
-			++g_received_responses;
+			if (port_scan[i].port == ntohs(udph->dest) && port_scan[i].scans_type[j].source_port == ntohs(udph->source))
+			{
+				port_scan[i].scans_type[j].state = OPEN;
+				++g_received_responses;
+			}
 		}
 		i++;
 	}
@@ -26,26 +29,29 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 
 	while (port_scan[i].port != -1)
 	{
-		if (port_scan[i].port == ntohs(tcph->source) && port_scan[i].scans_type->source_port == ntohs(tcph->dest))
+		for (int j = 0; j < port_scan[i].n_scans; ++j)
 		{
-			if (port_scan[i].scans_type->type == SYN)
+			if (port_scan[i].port == ntohs(tcph->source) && port_scan[i].scans_type[j].source_port == ntohs(tcph->dest))
 			{
-				if (tcph->syn && tcph->ack)
-					port_scan[i].scans_type->state = OPEN;
-				else if (tcph->rst)
-					port_scan[i].scans_type->state = CLOSED;
+				if (port_scan[i].scans_type[j].type == SYN)
+				{
+					if (tcph->syn && tcph->ack)
+						port_scan[i].scans_type[j].state = OPEN;
+					else if (tcph->rst)
+						port_scan[i].scans_type[j].state = CLOSED;
+				}
+				else if (port_scan[i].scans_type[j].type == NUL || port_scan[i].scans_type[j].type == FIN || port_scan[i].scans_type[j].type == XMAS)
+				{
+					if (tcph->rst)
+						port_scan[i].scans_type[j].state = CLOSED;
+				}
+				else if (port_scan[i].scans_type[j].type == ACK)
+				{
+					if (tcph->rst)
+						port_scan[i].scans_type[j].state = UNFILTERED;
+				}
+				++g_received_responses;
 			}
-			else if (port_scan[i].scans_type->type == NUL || port_scan[i].scans_type->type == FIN || port_scan[i].scans_type->type == XMAS)
-			{
-				if (tcph->rst)
-					port_scan[i].scans_type->state = CLOSED;
-			}
-			else if (port_scan[i].scans_type->type == ACK)
-			{
-				if (tcph->rst)
-					port_scan[i].scans_type->state = UNFILTERED;
-			}
-			++g_received_responses;
 		}
 		++i;
 	}
@@ -60,29 +66,32 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 
 	while (port_scan[i].port != -1)
 	{
-		if (orig_ip->ip_p == IPPROTO_TCP)
+		for (int j = 0; j < port_scan[i].n_scans; ++j)
 		{
-			struct tcphdr	*orig_tcp = (struct tcphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
-			if (port_scan[i].port == ntohs(orig_tcp->dest) && port_scan[i].scans_type->source_port == ntohs(orig_tcp->source))
+			if (orig_ip->ip_p == IPPROTO_TCP)
 			{
-				if (icmph->type == ICMP_DEST_UNREACH)
-					port_scan[i].scans_type->state = FILTERED;
-				++g_received_responses;
-			}
-		}
-		else if (orig_ip->ip_p == IPPROTO_UDP)
-		{
-			struct udphdr	*orig_udp = (struct udphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
-			if (port_scan[i].port == ntohs(orig_udp->dest) && port_scan[i].scans_type->source_port == ntohs(orig_udp->source))
-			{
-				if (icmph->type == ICMP_DEST_UNREACH)
+				struct tcphdr	*orig_tcp = (struct tcphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
+				if (port_scan[i].port == ntohs(orig_tcp->dest) && port_scan[i].scans_type[j].source_port == ntohs(orig_tcp->source))
 				{
-					if (icmph->code == ICMP_PORT_UNREACH)
-						port_scan[i].scans_type->state = CLOSED;
-					else
-						port_scan[i].scans_type->state = FILTERED;
+					if (icmph->type == ICMP_DEST_UNREACH)
+						port_scan[i].scans_type[j].state = FILTERED;
+					++g_received_responses;
 				}
-				++g_received_responses;
+			}
+			else if (orig_ip->ip_p == IPPROTO_UDP)
+			{
+				struct udphdr	*orig_udp = (struct udphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
+				if (port_scan[i].port == ntohs(orig_udp->dest) && port_scan[i].scans_type[j].source_port == ntohs(orig_udp->source))
+				{
+					if (icmph->type == ICMP_DEST_UNREACH)
+					{
+						if (icmph->code == ICMP_PORT_UNREACH)
+							port_scan[i].scans_type[j].state = CLOSED;
+						else
+							port_scan[i].scans_type[j].state = FILTERED;
+					}
+					++g_received_responses;
+				}
 			}
 		}
 		i++;
@@ -94,7 +103,6 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 	(void)userData;
 	(void)pkthdr;
 	struct ip *ipHeader = (struct ip *)(packet + ETHERNET_HEADER_SIZE);
-
 
 	if (ipHeader->ip_p == IPPROTO_TCP)
 	{

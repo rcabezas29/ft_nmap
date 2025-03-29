@@ -24,11 +24,13 @@ void *scanning(t_thread_data *data)
 		int port_index = data->start_port_index + i / n_scans;
 		int port = data->scan->port_scan_array[port_index].port;
 		t_scan_type_info *sti = &(data->scan->port_scan_array[port_index].scans_type[i % n_scans]);
+		pthread_mutex_lock(&sti->scan_mutex);
 
 		sockets[i] = socket(AF_INET, SOCK_RAW, sti->type == UDP ? IPPROTO_UDP : IPPROTO_TCP);
 		if (sockets[i] < 0)
 		{
 			perror("Socket creation failed");
+			pthread_mutex_unlock(&sti->scan_mutex);
 			continue;
 		}
 		if (setsockopt(sockets[i], IPPROTO_IP, IP_HDRINCL, val, sizeof(one)) < 0)
@@ -37,6 +39,7 @@ void *scanning(t_thread_data *data)
 			exit(1);
 		}
 		send_port_scan(sockets[i], data->scan->ip, port, sti, data->source_ip);
+		pthread_mutex_unlock(&sti->scan_mutex);
 		close(sockets[i]);
 	}
 	free(sockets);

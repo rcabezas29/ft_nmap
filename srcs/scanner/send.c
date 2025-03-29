@@ -62,9 +62,7 @@ void	send_tcp_scan(char *packet, int port, t_scan_type_info *sti, char *ip, char
 	tcph->window = htons(65535);
 	tcph->urg_ptr = 0;
 
-	pthread_mutex_lock(&sti->scan_mutex);
 	sti->source_port = ntohs(tcph->source);
-	pthread_mutex_unlock(&sti->scan_mutex);
 
 	psh.source_address = inet_addr(source_ip);
 	psh.dest_address = inet_addr(ip);

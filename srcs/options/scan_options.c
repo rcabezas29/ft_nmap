@@ -4,6 +4,7 @@ t_list	*add_all_scans(void)
 {
 	t_list	*scan_type;
 
+	scan_type = NULL;
 	ft_lstadd_back(&scan_type, ft_lstnew(ft_strdup("SYN")));
 	ft_lstadd_back(&scan_type, ft_lstnew(ft_strdup("NULL")));
 	ft_lstadd_back(&scan_type, ft_lstnew(ft_strdup("ACK")));

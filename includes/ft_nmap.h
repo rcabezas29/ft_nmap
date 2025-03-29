@@ -18,11 +18,11 @@
 
 typedef struct s_thread_data
 {
-	t_scan	*scan;
-	int		start_port_index;
-	int		end_port_index;
-	int		n_ports;
-	char	*source_ip;
+	volatile t_scan	*scan;
+	int				start_port_index;
+	int				end_port_index;
+	int				n_ports;
+	char			*source_ip;
 }		t_thread_data;
 
 void	process_packet(t_scan *scan, unsigned char *buffer);

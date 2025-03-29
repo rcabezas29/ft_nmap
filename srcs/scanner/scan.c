@@ -34,7 +34,7 @@ void *scanning(t_thread_data *data)
 	return NULL;
 }
 
-t_scan *create_scan_result_struct(t_nmap_config *conf, char *ip)
+t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 {
 	t_scan *scan = malloc(sizeof(t_scan));
 	int n_ports = ft_lstsize(conf->ports);

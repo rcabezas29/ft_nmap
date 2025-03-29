@@ -28,6 +28,7 @@ typedef	struct	u_scan_type_info
 	t_scan_type		type;
 	t_scan_state	state;
 	int				source_port;
+	pthread_mutex_t	scan_mutex;
 }	t_scan_type_info;
 
 typedef struct	s_port_scan
@@ -39,10 +40,11 @@ typedef struct	s_port_scan
 
 typedef struct s_scan
 {
-	t_port_scan	*port_scan_array;
-	char		*ip;
-	int			n_ports;
-	bool		ready_to_send;
+	t_port_scan		*port_scan_array;
+	char			*ip;
+	int				n_ports;
+	bool			ready_to_send;
+	pthread_mutex_t	ready_to_send_mutex;
 }		t_scan;
 
 typedef struct s_nmap_config

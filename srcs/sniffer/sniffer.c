@@ -1,7 +1,8 @@
 #include <ft_nmap.h>
 
-t_port_scan	*g_port_scan;
-int			g_received_responses;
+t_port_scan		*g_port_scan;
+pthread_mutex_t	g_received_responses_mutex = PTHREAD_MUTEX_INITIALIZER;
+int				g_received_responses;
 
 void	manage_udp_scan_response(struct udphdr *udph)
 {
@@ -12,11 +13,13 @@ void	manage_udp_scan_response(struct udphdr *udph)
 	{
 		for (int j = 0; j < port_scan[i].n_scans; ++j)
 		{
+			pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
 			if (port_scan[i].port == ntohs(udph->dest) && port_scan[i].scans_type[j].source_port == ntohs(udph->source))
 			{
 				port_scan[i].scans_type[j].state = OPEN;
 				++g_received_responses;
 			}
+			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 		}
 		i++;
 	}
@@ -31,6 +34,7 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 	{
 		for (int j = 0; j < port_scan[i].n_scans; ++j)
 		{
+			pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
 			if (port_scan[i].port == ntohs(tcph->source) && port_scan[i].scans_type[j].source_port == ntohs(tcph->dest))
 			{
 				if (port_scan[i].scans_type[j].type == SYN)
@@ -52,6 +56,7 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 				}
 				++g_received_responses;
 			}
+			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 		}
 		++i;
 	}
@@ -68,6 +73,7 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 	{
 		for (int j = 0; j < port_scan[i].n_scans; ++j)
 		{
+			pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
 			if (orig_ip->ip_p == IPPROTO_TCP)
 			{
 				struct tcphdr	*orig_tcp = (struct tcphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
@@ -93,6 +99,7 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 					++g_received_responses;
 				}
 			}
+			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 		}
 		i++;
 	}
@@ -104,6 +111,7 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 	(void)pkthdr;
 	struct ip *ipHeader = (struct ip *)(packet + ETHERNET_HEADER_SIZE);
 
+	pthread_mutex_lock(&g_received_responses_mutex);
 	if (ipHeader->ip_p == IPPROTO_TCP)
 	{
 		struct tcphdr *tcph = (struct tcphdr *)(packet + ETHERNET_HEADER_SIZE + ipHeader->ip_hl * 4);
@@ -116,11 +124,14 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 	}
 	else if (ipHeader->ip_p == IPPROTO_ICMP)
 		manage_icmp_scan_response(packet, ipHeader);
+	pthread_mutex_unlock(&g_received_responses_mutex);
 }
 
 void	*sniffer_loop(void *handle)
 {
+	pthread_mutex_lock(&g_received_responses_mutex);
 	g_received_responses = 0;
+	pthread_mutex_unlock(&g_received_responses_mutex);
 	pcap_loop((pcap_t *)handle, 0, packet_handler, NULL);
 	return NULL;
 }
@@ -132,11 +143,19 @@ void	wait_for_responses(t_scan *scan, int timeout)
 	gettimeofday(&start, NULL);
 	while (true)
 	{
+		pthread_mutex_lock(&g_received_responses_mutex);
 		if (g_received_responses >= scan->n_ports * scan->port_scan_array[0].n_scans)
+		{
+			pthread_mutex_unlock(&g_received_responses_mutex);
 			break ;
+		}
 		gettimeofday(&current_time, NULL);
 		if (timeout != 0 && (current_time.tv_sec - start.tv_sec) * 1000 + (current_time.tv_usec - start.tv_usec) / 1000 >= timeout)
+		{
+			pthread_mutex_unlock(&g_received_responses_mutex);
 			break ;
+		}
+		pthread_mutex_unlock(&g_received_responses_mutex);
 	}
 }
 
@@ -194,7 +213,9 @@ void	sniffer(t_scan *scan, int timeout, char *ip)
 		return ;
 	}
 	g_port_scan = scan->port_scan_array;
+	pthread_mutex_lock(&scan->ready_to_send_mutex);
 	scan->ready_to_send = true;
+	pthread_mutex_unlock(&scan->ready_to_send_mutex);
 	pthread_create(&sniffer_thread, NULL, sniffer_loop, handle);
 	wait_for_responses(scan, timeout);
 	pcap_breakloop(handle);

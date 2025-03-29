@@ -8,8 +8,17 @@ void *scanning(t_thread_data *data)
 	int one = 1;
 	const int *val = &one;
 
-	while (data->scan->ready_to_send == false)
+	while (true)
+	{
+		pthread_mutex_lock(&data->scan->ready_to_send_mutex);
+		if (data->scan->ready_to_send == true)
+		{
+			pthread_mutex_unlock(&data->scan->ready_to_send_mutex);
+			break;
+		}
+		pthread_mutex_unlock(&data->scan->ready_to_send_mutex);
 		usleep(500);
+	}
 	for (int i = 0; i < len; i++)
 	{
 		int port_index = data->start_port_index + i / n_scans;
@@ -40,6 +49,7 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 	int n_ports = ft_lstsize(conf->ports);
 	int n_scans = ft_lstsize(conf->scan_type);
 
+	pthread_mutex_init(&scan->ready_to_send_mutex, NULL);
 	scan->ip = ip;
 	scan->n_ports = n_ports;
 	scan->port_scan_array = malloc(sizeof(t_port_scan) * (n_ports + 1));
@@ -55,6 +65,7 @@ t_scan	*create_scan_result_struct(t_nmap_config *conf, char *ip)
 		for (int j = 0; j < n_scans; ++j)
 		{
 			scan->port_scan_array[i].scans_type[j].type = string_to_scan_type(current_scan->content);
+			pthread_mutex_init(&scan->port_scan_array[i].scans_type[j].scan_mutex, NULL);
 			scan->port_scan_array[i].scans_type[j].state = (scan->port_scan_array[i].scans_type[j].type == SYN || scan->port_scan_array[i].scans_type[j].type == ACK) ? FILTERED : OPEN_FILTERED;
 			current_scan = current_scan->next;
 		}

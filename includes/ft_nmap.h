@@ -18,7 +18,7 @@
 
 typedef struct s_thread_data
 {
-	volatile t_scan	*scan;
+	t_scan			*scan;
 	int				start_port_index;
 	int				end_port_index;
 	int				n_ports;

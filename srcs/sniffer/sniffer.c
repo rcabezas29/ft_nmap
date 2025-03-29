@@ -14,10 +14,12 @@ void	manage_udp_scan_response(struct udphdr *udph)
 		for (int j = 0; j < port_scan[i].n_scans; ++j)
 		{
 			pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
-			if (port_scan[i].port == ntohs(udph->dest) && port_scan[i].scans_type[j].source_port == ntohs(udph->source))
+			if (port_scan[i].port == ntohs(udph->source) && port_scan[i].scans_type[j].source_port == ntohs(udph->dest))
 			{
 				port_scan[i].scans_type[j].state = OPEN;
-				++g_received_responses;
+				pthread_mutex_lock(&g_received_responses_mutex);
+				g_received_responses += 1;
+				pthread_mutex_unlock(&g_received_responses_mutex);
 			}
 			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 		}
@@ -54,7 +56,9 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 					if (tcph->rst)
 						port_scan[i].scans_type[j].state = UNFILTERED;
 				}
-				++g_received_responses;
+				pthread_mutex_lock(&g_received_responses_mutex);
+				g_received_responses += 1;
+				pthread_mutex_unlock(&g_received_responses_mutex);
 			}
 			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 		}
@@ -81,7 +85,9 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 				{
 					if (icmph->type == ICMP_DEST_UNREACH)
 						port_scan[i].scans_type[j].state = FILTERED;
-					++g_received_responses;
+					pthread_mutex_lock(&g_received_responses_mutex);
+					g_received_responses += 1;
+					pthread_mutex_unlock(&g_received_responses_mutex);
 				}
 			}
 			else if (orig_ip->ip_p == IPPROTO_UDP)
@@ -96,7 +102,9 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 						else
 							port_scan[i].scans_type[j].state = FILTERED;
 					}
-					++g_received_responses;
+					pthread_mutex_lock(&g_received_responses_mutex);
+					g_received_responses += 1;
+					pthread_mutex_unlock(&g_received_responses_mutex);
 				}
 			}
 			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
@@ -111,7 +119,6 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 	(void)pkthdr;
 	struct ip *ipHeader = (struct ip *)(packet + ETHERNET_HEADER_SIZE);
 
-	pthread_mutex_lock(&g_received_responses_mutex);
 	if (ipHeader->ip_p == IPPROTO_TCP)
 	{
 		struct tcphdr *tcph = (struct tcphdr *)(packet + ETHERNET_HEADER_SIZE + ipHeader->ip_hl * 4);
@@ -124,7 +131,6 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 	}
 	else if (ipHeader->ip_p == IPPROTO_ICMP)
 		manage_icmp_scan_response(packet, ipHeader);
-	pthread_mutex_unlock(&g_received_responses_mutex);
 }
 
 void	*sniffer_loop(void *handle)
@@ -196,14 +202,14 @@ void	sniffer(t_scan *scan, int timeout, char *ip)
 		fprintf(stderr, "Couldn't get netmask for device %s: %s\n", device->name, errbuf);
 		return ;
 	}
-	handle = pcap_open_live(device->name, BUFSIZ, 1, 100, errbuf);
+	handle = pcap_open_live(device->name, BUFSIZ * 10, 1, 10, errbuf);
 	if (handle == NULL)
 	{
 		fprintf(stderr, "Could not open device: %s\n", errbuf);
 		pcap_freealldevs(alldevs);
 		return ;
 	}
-	snprintf(filter_exp, sizeof(filter_exp), "src %s and (tcp or udp or icmp)", scan->ip);
+	snprintf(filter_exp, sizeof(filter_exp), "src host %s", scan->ip);
 	if (pcap_compile(handle, &filter, filter_exp, 0, netp) == -1 ||
 		pcap_setfilter(handle, &filter) == -1)
 	{

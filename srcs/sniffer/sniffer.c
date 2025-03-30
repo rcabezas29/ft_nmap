@@ -8,15 +8,17 @@ void	manage_udp_scan_response(struct udphdr *udph)
 {
 	t_port_scan	*port_scan = g_port_scan;
 	int			i = 0;
+	uint16_t	source_port = ntohs(udph->source);
+	uint16_t	dest_port = ntohs(udph->dest);
 
 	while (port_scan[i].port != -1)
 	{
-		if (port_scan[i].port == ntohs(udph->source))
+		if (port_scan[i].port == source_port)
 		{
 			for (int j = 0; j < port_scan[i].n_scans; ++j)
 			{
 				pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
-				if (port_scan[i].scans_type[j].source_port == ntohs(udph->dest))
+				if (port_scan[i].scans_type[j].source_port == dest_port)
 				{
 					port_scan[i].scans_type[j].state = OPEN;
 					pthread_mutex_lock(&g_received_responses_mutex);
@@ -36,15 +38,17 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 {
 	t_port_scan	*port_scan = g_port_scan;
 	int			i = 0;
+	uint16_t	source_port = ntohs(tcph->source);
+    uint16_t	dest_port = ntohs(tcph->dest);
 
 	while (port_scan[i].port != -1)
 	{
-		if (port_scan[i].port == ntohs(tcph->source))
+		if (port_scan[i].port == source_port)
 		{
 			for (int j = 0; j < port_scan[i].n_scans; ++j)
 			{
 				pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
-				if (port_scan[i].scans_type[j].source_port == ntohs(tcph->dest))
+				if (port_scan[i].scans_type[j].source_port == dest_port)
 				{
 					if (port_scan[i].scans_type[j].type == SYN)
 					{
@@ -76,25 +80,27 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 	}
 }
 
-void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
+void	manage_icmp_scan_response(const u_char *packet, struct ip *iph)
 {
-	struct icmphdr	*icmph = (struct icmphdr *)(packet + ETHERNET_HEADER_SIZE + ipHeader->ip_hl * 4);
-	struct ip		*orig_ip = (struct ip *)((packet + ETHERNET_HEADER_SIZE) + (ipHeader->ip_hl * 4) + sizeof(icmph));
+	struct icmphdr	*icmph = (struct icmphdr *)(packet + ETHERNET_HEADER_SIZE + iph->ip_hl * 4);
+	struct ip		*orig_ip = (struct ip *)((packet + ETHERNET_HEADER_SIZE) + (iph->ip_hl * 4) + sizeof(icmph));
 	t_port_scan		*port_scan = g_port_scan;
 	int				i = 0;
 
 	if (orig_ip->ip_p == IPPROTO_TCP)
 	{
 		struct tcphdr	*orig_tcp = (struct tcphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
+		uint16_t	source_port = ntohs(orig_tcp->source);
+		uint16_t	dest_port = ntohs(orig_tcp->dest);
 
 		while (port_scan[i].port != -1)
 		{
-			if (port_scan[i].port == ntohs(orig_tcp->dest))
+			if (port_scan[i].port == dest_port)
 			{
 				for (int j = 0; j < port_scan[i].n_scans; ++j)
 				{
 					pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
-					if (port_scan[i].scans_type[j].source_port == ntohs(orig_tcp->source))
+					if (port_scan[i].scans_type[j].source_port == source_port)
 					{
 						if (icmph->type == ICMP_DEST_UNREACH)
 							port_scan[i].scans_type[j].state = FILTERED;
@@ -114,15 +120,17 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 	else if (orig_ip->ip_p == IPPROTO_UDP)
 	{
 		struct udphdr	*orig_udp = (struct udphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
+		uint16_t	source_port = ntohs(orig_udp->source);
+		uint16_t	dest_port = ntohs(orig_udp->dest);
 
 		while (port_scan[i].port != -1)
 		{
-			if (port_scan[i].port == ntohs(orig_udp->dest))
+			if (port_scan[i].port == dest_port)
 			{
 				for (int j = 0; j < port_scan[i].n_scans; ++j)
 				{
 					pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
-					if (port_scan[i].scans_type[j].source_port == ntohs(orig_udp->source))
+					if (port_scan[i].scans_type[j].source_port == source_port)
 					{
 						if (icmph->type == ICMP_DEST_UNREACH)
 						{
@@ -149,20 +157,20 @@ void	packet_handler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_
 {
 	(void)userData;
 	(void)pkthdr;
-	struct ip *ipHeader = (struct ip *)(packet + ETHERNET_HEADER_SIZE);
+	struct ip *iph = (struct ip *)(packet + ETHERNET_HEADER_SIZE);
 
-	if (ipHeader->ip_p == IPPROTO_TCP)
+	if (iph->ip_p == IPPROTO_TCP)
 	{
-		struct tcphdr *tcph = (struct tcphdr *)(packet + ETHERNET_HEADER_SIZE + ipHeader->ip_hl * 4);
+		struct tcphdr *tcph = (struct tcphdr *)(packet + ETHERNET_HEADER_SIZE + iph->ip_hl * 4);
 		manage_tcp_scan_response(tcph);
 	}
-	else if (ipHeader->ip_p == IPPROTO_UDP)
+	else if (iph->ip_p == IPPROTO_UDP)
 	{
-		struct udphdr *udph = (struct udphdr *)(packet + ETHERNET_HEADER_SIZE + ipHeader->ip_hl * 4);
+		struct udphdr *udph = (struct udphdr *)(packet + ETHERNET_HEADER_SIZE + iph->ip_hl * 4);
 		manage_udp_scan_response(udph);
 	}
-	else if (ipHeader->ip_p == IPPROTO_ICMP)
-		manage_icmp_scan_response(packet, ipHeader);
+	else if (iph->ip_p == IPPROTO_ICMP)
+		manage_icmp_scan_response(packet, iph);
 }
 
 void	*sniffer_loop(void *handle)

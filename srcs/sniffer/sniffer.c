@@ -11,17 +11,22 @@ void	manage_udp_scan_response(struct udphdr *udph)
 
 	while (port_scan[i].port != -1)
 	{
-		for (int j = 0; j < port_scan[i].n_scans; ++j)
+		if (port_scan[i].port == ntohs(udph->source))
 		{
-			pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
-			if (port_scan[i].port == ntohs(udph->source) && port_scan[i].scans_type[j].source_port == ntohs(udph->dest))
+			for (int j = 0; j < port_scan[i].n_scans; ++j)
 			{
-				port_scan[i].scans_type[j].state = OPEN;
-				pthread_mutex_lock(&g_received_responses_mutex);
-				g_received_responses += 1;
-				pthread_mutex_unlock(&g_received_responses_mutex);
+				pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
+				if (port_scan[i].scans_type[j].source_port == ntohs(udph->dest))
+				{
+					port_scan[i].scans_type[j].state = OPEN;
+					pthread_mutex_lock(&g_received_responses_mutex);
+					g_received_responses += 1;
+					pthread_mutex_unlock(&g_received_responses_mutex);
+					pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
+					return ;
+				}
+				pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 			}
-			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 		}
 		i++;
 	}
@@ -34,33 +39,38 @@ void	manage_tcp_scan_response(struct tcphdr *tcph)
 
 	while (port_scan[i].port != -1)
 	{
-		for (int j = 0; j < port_scan[i].n_scans; ++j)
+		if (port_scan[i].port == ntohs(tcph->source))
 		{
-			pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
-			if (port_scan[i].port == ntohs(tcph->source) && port_scan[i].scans_type[j].source_port == ntohs(tcph->dest))
+			for (int j = 0; j < port_scan[i].n_scans; ++j)
 			{
-				if (port_scan[i].scans_type[j].type == SYN)
+				pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
+				if (port_scan[i].scans_type[j].source_port == ntohs(tcph->dest))
 				{
-					if (tcph->syn && tcph->ack)
-						port_scan[i].scans_type[j].state = OPEN;
-					else if (tcph->rst)
-						port_scan[i].scans_type[j].state = CLOSED;
+					if (port_scan[i].scans_type[j].type == SYN)
+					{
+						if (tcph->syn && tcph->ack)
+							port_scan[i].scans_type[j].state = OPEN;
+						else if (tcph->rst)
+							port_scan[i].scans_type[j].state = CLOSED;
+					}
+					else if (port_scan[i].scans_type[j].type == NUL || port_scan[i].scans_type[j].type == FIN || port_scan[i].scans_type[j].type == XMAS)
+					{
+						if (tcph->rst)
+							port_scan[i].scans_type[j].state = CLOSED;
+					}
+					else if (port_scan[i].scans_type[j].type == ACK)
+					{
+						if (tcph->rst)
+							port_scan[i].scans_type[j].state = UNFILTERED;
+					}
+					pthread_mutex_lock(&g_received_responses_mutex);
+					g_received_responses += 1;
+					pthread_mutex_unlock(&g_received_responses_mutex);
+					pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
+					return ;
 				}
-				else if (port_scan[i].scans_type[j].type == NUL || port_scan[i].scans_type[j].type == FIN || port_scan[i].scans_type[j].type == XMAS)
-				{
-					if (tcph->rst)
-						port_scan[i].scans_type[j].state = CLOSED;
-				}
-				else if (port_scan[i].scans_type[j].type == ACK)
-				{
-					if (tcph->rst)
-						port_scan[i].scans_type[j].state = UNFILTERED;
-				}
-				pthread_mutex_lock(&g_received_responses_mutex);
-				g_received_responses += 1;
-				pthread_mutex_unlock(&g_received_responses_mutex);
+				pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 			}
-			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 		}
 		++i;
 	}
@@ -73,43 +83,65 @@ void	manage_icmp_scan_response(const u_char *packet, struct ip *ipHeader)
 	t_port_scan		*port_scan = g_port_scan;
 	int				i = 0;
 
-	while (port_scan[i].port != -1)
+	if (orig_ip->ip_p == IPPROTO_TCP)
 	{
-		for (int j = 0; j < port_scan[i].n_scans; ++j)
+		struct tcphdr	*orig_tcp = (struct tcphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
+
+		while (port_scan[i].port != -1)
 		{
-			pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
-			if (orig_ip->ip_p == IPPROTO_TCP)
+			if (port_scan[i].port == ntohs(orig_tcp->dest))
 			{
-				struct tcphdr	*orig_tcp = (struct tcphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
-				if (port_scan[i].port == ntohs(orig_tcp->dest) && port_scan[i].scans_type[j].source_port == ntohs(orig_tcp->source))
+				for (int j = 0; j < port_scan[i].n_scans; ++j)
 				{
-					if (icmph->type == ICMP_DEST_UNREACH)
-						port_scan[i].scans_type[j].state = FILTERED;
-					pthread_mutex_lock(&g_received_responses_mutex);
-					g_received_responses += 1;
-					pthread_mutex_unlock(&g_received_responses_mutex);
-				}
-			}
-			else if (orig_ip->ip_p == IPPROTO_UDP)
-			{
-				struct udphdr	*orig_udp = (struct udphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
-				if (port_scan[i].port == ntohs(orig_udp->dest) && port_scan[i].scans_type[j].source_port == ntohs(orig_udp->source))
-				{
-					if (icmph->type == ICMP_DEST_UNREACH)
+					pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
+					if (port_scan[i].scans_type[j].source_port == ntohs(orig_tcp->source))
 					{
-						if (icmph->code == ICMP_PORT_UNREACH)
-							port_scan[i].scans_type[j].state = CLOSED;
-						else
+						if (icmph->type == ICMP_DEST_UNREACH)
 							port_scan[i].scans_type[j].state = FILTERED;
+						pthread_mutex_lock(&g_received_responses_mutex);
+						g_received_responses += 1;
+						pthread_mutex_unlock(&g_received_responses_mutex);
+						pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
+						return ;
 					}
-					pthread_mutex_lock(&g_received_responses_mutex);
-					g_received_responses += 1;
-					pthread_mutex_unlock(&g_received_responses_mutex);
+					pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
 				}
 			}
-			pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
+			i++;
 		}
-		i++;
+		
+	}
+	else if (orig_ip->ip_p == IPPROTO_UDP)
+	{
+		struct udphdr	*orig_udp = (struct udphdr *)((unsigned char *)orig_ip + (orig_ip->ip_hl * 4));
+
+		while (port_scan[i].port != -1)
+		{
+			if (port_scan[i].port == ntohs(orig_udp->dest))
+			{
+				for (int j = 0; j < port_scan[i].n_scans; ++j)
+				{
+					pthread_mutex_lock(&port_scan[i].scans_type[j].scan_mutex);
+					if (port_scan[i].scans_type[j].source_port == ntohs(orig_udp->source))
+					{
+						if (icmph->type == ICMP_DEST_UNREACH)
+						{
+							if (icmph->code == ICMP_PORT_UNREACH)
+								port_scan[i].scans_type[j].state = CLOSED;
+							else
+								port_scan[i].scans_type[j].state = FILTERED;
+						}
+						pthread_mutex_lock(&g_received_responses_mutex);
+						g_received_responses += 1;
+						pthread_mutex_unlock(&g_received_responses_mutex);
+						pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
+						return ;
+					}
+					pthread_mutex_unlock(&port_scan[i].scans_type[j].scan_mutex);
+				}
+			}
+			i++;
+		}
 	}
 }
 
@@ -202,7 +234,7 @@ void	sniffer(t_scan *scan, int timeout, char *ip)
 		fprintf(stderr, "Couldn't get netmask for device %s: %s\n", device->name, errbuf);
 		return ;
 	}
-	handle = pcap_open_live(device->name, BUFSIZ * 10, 1, 10, errbuf);
+	handle = pcap_open_live(device->name, BUFSIZ, 1, 10, errbuf);
 	if (handle == NULL)
 	{
 		fprintf(stderr, "Could not open device: %s\n", errbuf);

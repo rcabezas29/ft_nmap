@@ -1,1 +1,0 @@
-./build/ft_nmap --ip scanme.nmap.org --scan SYN / nmap scanme.nmap.org -p 1-1024 -sS

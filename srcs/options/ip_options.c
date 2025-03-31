@@ -8,24 +8,17 @@ bool		is_valid_ip(const char *ip)
 	return result != 0;
 }
 
-static int	count_ip_file_length(const char *argument)
+static int	count_ip_file_length(FILE *fp)
 {
-	FILE	*fp;
-	int		lines;
-	int		ch;
+	size_t	len = 0;
+	int		count = 0;
+	char	*line = NULL;
 
-	fp = fopen(argument,"r");
 	fseek(fp, 0, SEEK_SET);
-	lines = 0;
-	ch = 0;
-	while (!feof(fp))
-	{
-		ch = fgetc(fp);
-		if (ch == '\n')
-			lines++;
-	}
-	fclose(fp);
-	return lines;
+	while (getline(&line, &len, fp) != -1)
+		count++;
+	free(line);
+	return count;
 }
 
 static char	*get_ip_from_domain(const char *domain)
@@ -55,7 +48,7 @@ char	**parse_ips_file(const char *argument)
 		printf("unable to find file (%s)\n", argument);
 		exit(EXIT_FAILURE);
 	}
-	ips = malloc((count_ip_file_length(argument) + 1) * sizeof(char *));
+	ips = malloc((count_ip_file_length(fp) + 1) * sizeof(char *));
 	i = 0;
 	fseek(fp, 0, SEEK_SET);
 	while ((getline(&line, &len, fp)) != -1)
@@ -72,7 +65,6 @@ char	**parse_ips_file(const char *argument)
 	fclose(fp);
 	return ips;
 }
-
 
 char	**parse_ip(const char *argument)
 {

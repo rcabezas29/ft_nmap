@@ -5,6 +5,8 @@ static bool	is_valid_port_options(const char *argument)
 	int	i;
 
 	i = 0;
+	if (!ft_isdigit(argument[i]))
+		return false;
 	while (argument[i])
 	{
 		if (argument[i] != ',' && argument[i] != '-' && !ft_isdigit(argument[i]))
@@ -20,6 +22,19 @@ static void	parse_port_ranges(char *commas, t_list **ports)
 	int		beggining, end;
 
 	range = ft_split(commas, '-');
+	if (!range[0] || !range[1])
+	{
+		write(STDERR_FILENO, "Error: Unable to recognize ports\n", 34);
+		exit(EXIT_FAILURE);
+	}
+	for (int i = 0; range[i]; ++i)
+	{
+		if (!ft_isdigit(range[i][0]))
+		{
+			write(STDERR_FILENO, "Error: Unable to recognize ports\n", 34);
+			exit(EXIT_FAILURE);
+		}
+	}
 	beggining = ft_atoi(range[0]);
 	end = ft_atoi(range[1]);
 	double_free(range);
